@@ -12,6 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.add('active');
             const targetId = item.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
+
+            // Pokud uživatel klikne na Oblíbené, překreslíme je
+            if (targetId === 'favorites-section') {
+                renderFavorites();
+            }
         });
     });
 
@@ -24,8 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagsContainer = document.getElementById('tags-container');
     const btnSearch = document.getElementById('btn-search');
     const recipesGrid = document.getElementById('recipes-grid');
+    const favoritesGrid = document.getElementById('favorites-grid');
 
     let selectedIngredients = [];
+    // Načtení oblíbených z localStorage při startu
+    let favorites = JSON.parse(localStorage.getItem('cookit_favorites')) || [];
+
     let debounceTimer; // Pro ochranu proti vyčerpání API limitu
 
     // Otevření modalu
@@ -143,34 +152,75 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Chyba při stahování receptů');
             
             const recipes = await response.json();
-            renderRecipes(recipes);
+            renderRecipes(recipes, recipesGrid);
         } catch (error) {
             console.error("Chyba:", error);
             recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Došlo k chybě při načítání receptů. Zkontroluj API klíč.</p>';
         }
     }
 
-    // Vykreslení nalezených receptů do mřížky
-    function renderRecipes(recipes) {
-        recipesGrid.innerHTML = '';
+    // Funkce pro přepínání oblíbených
+    function toggleFavorite(recipe, button) {
+        const index = favorites.findIndex(f => f.id === recipe.id);
+        
+        if (index > -1) {
+            // Odstranit z oblíbených
+            favorites.splice(index, 1);
+            button.classList.remove('active');
+            button.innerHTML = '<i class="ph ph-heart"></i>';
+        } else {
+            // Přidat do oblíbených
+            favorites.push(recipe);
+            button.classList.add('active');
+            button.innerHTML = '<i class="ph-fill ph-heart"></i>';
+        }
+
+        // Uložit do localStorage
+        localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
+        
+        // Pokud jsme zrovna v sekci oblíbených, rovnou to překreslíme
+        if (document.getElementById('favorites-section').classList.contains('active')) {
+            renderFavorites();
+        }
+    }
+
+    function renderFavorites() {
+        renderRecipes(favorites, favoritesGrid);
+    }
+
+    // Univerzální vykreslení receptů do mřížky
+    function renderRecipes(recipes, container) {
+        container.innerHTML = '';
         
         if (recipes.length === 0) {
-            recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Z těchto ingrediencí se asi nic neuvaří. Zkus přidat další!</p>';
+            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Zatím tu nic není.</p>';
             return;
         }
 
         recipes.forEach(recipe => {
+            const isFav = favorites.some(f => f.id === recipe.id);
             const article = document.createElement('article');
             article.className = 'recipe-card';
             article.innerHTML = `
                 <img src="${recipe.image}" alt="${recipe.title}" class="recipe-img">
                 <div class="recipe-info">
                     <h3>${recipe.title}</h3>
-                    <p class="recipe-nutrition">Chybí suroviny: ${recipe.missedIngredientCount}</p>
-                    <button class="btn-fav"><i class="ph ph-heart"></i></button>
+                    <p class="recipe-nutrition">
+                        ${recipe.missedIngredientCount !== undefined ? `Chybí suroviny: ${recipe.missedIngredientCount}` : 'Uložený recept'}
+                    </p>
+                    <button class="btn-fav ${isFav ? 'active' : ''}">
+                        <i class="${isFav ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>
+                    </button>
                 </div>
             `;
-            recipesGrid.appendChild(article);
+
+            const btnFav = article.querySelector('.btn-fav');
+            btnFav.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(recipe, btnFav);
+            });
+
+            container.appendChild(article);
         });
     }
 });

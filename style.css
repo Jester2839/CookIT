@@ -258,6 +258,10 @@ body {
     cursor: pointer;
 }
 
+.btn-fav.active i {
+    color: #ff4757; /* Červená pro aktivní srdíčko */
+}
+
 /* Tlačítka */
 .btn-primary {
     background-color: var(--primary);
