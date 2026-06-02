@@ -1,15 +1,15 @@
 /* Globální resety a proměnné */
 :root {
-    --primary: #3C6867;       /* Tvoje hlavní barva */
-    --primary-dark: #284E4D;  /* Tmavší odstín pro hover */
-    --bg-main: #f1f5f9;       /* Světlé, čisté pozadí stránky */
+    --primary: #606C38;       /* Hlavní akcent: Tlumená šalvějová/olivová zelená */
+    --primary-dark: #4A542C;  /* Tmavší odstín pro hover */
+    --bg-main: #F9F9F6;       /* Pozadí (Base): Velmi jemná, teplá bílá */
     --bg-card: #ffffff;       /* Bílé karty pro maximální přehlednost */
-    --text-main: #09312F;     /* Tvoje nejtmavší barva pro text */
-    --text-muted: #5A807F;    /* Sage barva pro doplňkové texty */
+    --text-main: #2F3E46;     /* Text & Kontury: Velmi tmavá břidlicově šedá */
+    --text-muted: #7B8D96;    /* Mírně světlejší odstín pro doplňkové texty */
     --danger-light: #FFEBEE;
     --danger-text: #C62828;
-    --success-light: #f0f4f4; /* Velmi světlý nádech tvé palety */
-    --success-text: #3C6867;
+    --success-light: #EBF0E3; /* Velmi světlý nádech primární barvy */
+    --success-text: #606C38;  /* Text pro úspěšné stavy */
     --radius: 16px;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
@@ -60,9 +60,14 @@ body {
     gap: 0.8rem;
 }
 
-.header-logo img {
+.header-logo .logo-icon {
+    width: 32px;
     height: 32px;
-    width: auto;
+    background-color: var(--primary);
+    -webkit-mask: url('img/icon.svg') no-repeat center;
+    mask: url('img/icon.svg') no-repeat center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
 }
 
 .header-logo h1 {
@@ -150,7 +155,7 @@ body {
     cursor: pointer;
     line-height: 0;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(60, 104, 103, 0.3);
+    box-shadow: 0 4px 12px rgba(96, 108, 56, 0.3); /* Stín s novou primární barvou */
 }
 
 .btn-add-circle i {
@@ -449,7 +454,7 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 10px 15px -3px rgba(60, 104, 103, 0.2);
+    box-shadow: 0 10px 15px -3px rgba(96, 108, 56, 0.2); /* Stín s novou primární barvou */
     display: flex;
     justify-content: center;
     align-items: center;
