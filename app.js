@@ -136,6 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTags() {
         tagsContainer.innerHTML = '';
+        
+        if (selectedIngredients.length === 0) {
+            tagsContainer.innerHTML = `
+                <div class="empty-state-msg">
+                    <i class="ph ph-basket" style="font-size: 1.5rem"></i>
+                    <span>Zatím jsi nepřidal žádné suroviny</span>
+                </div>`;
+            return;
+        }
+
         selectedIngredients.forEach(ing => {
             const span = document.createElement('span');
             span.className = 'tag';
@@ -160,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Spojí ingredience čárkou pro API formát (např. "apples,+flour,+sugar")
         const ingredientsString = selectedIngredients.join(',+');
-        recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Hledám nejlepší recepty...</p>';
+        recipesGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary);"></i><p style="margin-top: 1rem; color: var(--text-muted);">Hledám nejlepší recepty...</p></div>';
 
         try {
             // Volání API pro hledání podle ingrediencí

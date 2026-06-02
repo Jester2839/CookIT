@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="img/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
@@ -24,15 +27,22 @@
         <section id="search-section" class="tab-content active">
             <div class="search-container">
                 <div class="search-header">
-                    <label>Co máš dnes v lednici?</label>
-                    <button id="btn-add-ingredient" class="btn-icon">
-                        <i class="ph ph-plus"></i>
-                    </button>
+                    <div class="search-header-row">
+                        <label>Moje ingredience</label>
+                        <button id="btn-add-ingredient" class="btn-add-circle" title="Přidat surovinu">
+                            <i class="ph ph-plus"></i>
+                        </button>
+                    </div>
+                    <p>Vyberte suroviny, které chcete použít k vaření.</p>
                 </div>
                 
                 <div id="tags-container" class="ingredients-tags">
+                    <!-- Dynamický obsah přes JS -->
                 </div>
-                <button id="btn-search" class="btn-primary">Najít recepty</button>
+                <button id="btn-search" class="btn-primary">
+                    <i class="ph ph-cooking-pot"></i>
+                    Najít recepty
+                </button>
             </div>
 
             <div id="recipes-grid" class="recipes-grid">

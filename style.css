@@ -1,24 +1,25 @@
 /* Globální resety a proměnné */
 :root {
-    --primary: #4CAF50;
-    --primary-dark: #3E8E41;
-    --bg-main: #FAFAFA;
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --bg-main: #f8fafc;
     --bg-card: #FFFFFF;
-    --text-main: #2C3E50;
-    --text-muted: #7F8C8D;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
     --danger-light: #FFEBEE;
     --danger-text: #C62828;
-    --success-light: #E8F5E9;
-    --success-text: #2E7D32;
-    --radius: 12px;
-    --shadow: 0 4px 6px rgba(0,0,0,0.05);
+    --success-light: #ecfdf5;
+    --success-text: #065f46;
+    --radius: 16px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
@@ -28,17 +29,22 @@ body {
     flex-direction: column;
     height: 100dvh; /* Dynamická výška viewportu */
     overflow: hidden;
+    line-height: 1.5;
 }
 
 /* Hlavička */
 .app-header {
-    background-color: var(--bg-card);
-    padding: 1rem;
-    text-align: center;
-    border-bottom: 1px solid #E0E0E0;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
 .header-logo {
@@ -48,8 +54,14 @@ body {
 }
 
 .header-logo img {
-    height: 44px;
+    height: 32px;
     width: auto;
+}
+
+.header-logo h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
 }
 
 .badge-offline {
@@ -64,8 +76,11 @@ body {
 .app-content {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1.5rem;
     padding-bottom: 5rem; /* Aby obsah nezajížděl pod spodní navigační lištu */
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .tab-content {
@@ -78,33 +93,71 @@ body {
 
 /* Vyhledávání a Autocomplete */
 .search-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    margin-bottom: 2.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    margin-bottom: 1.5rem;
+    gap: 1.25rem;
 }
 
 .search-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.1rem;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
-.btn-icon {
+.search-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-header label {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+}
+
+.search-header p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.btn-add-circle {
     background-color: var(--primary);
     color: white;
     border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    font-size: 1.2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 0;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(76, 175, 80, 0.4);
+    line-height: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-add-circle i {
+    font-size: 1.6rem;
+    display: block;
+}
+
+.btn-add-circle:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-add-circle:active {
+    transform: scale(0.95);
 }
 
 .ingredients-tags {
@@ -113,17 +166,35 @@ body {
     gap: 0.5rem;
     min-height: 40px; /* Aby to neskákalo, když je to prázdné */
     align-items: flex-start;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 2px dashed #cbd5e1;
+    transition: all 0.2s ease;
+}
+
+.empty-state-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    opacity: 0.7;
+    padding: 1rem 0;
 }
 
 .tag {
-    background-color: var(--success-light);
-    color: var(--success-text);
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
+    background-color: #f1f5f9;
+    color: var(--text-main);
+    padding: 0.5rem 0.8rem;
+    border-radius: 10px;
     font-size: 0.9rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    font-weight: 500;
 }
 
 .tag .remove-tag {
@@ -137,7 +208,8 @@ body {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
     z-index: 1000;
     justify-content: center;
     align-items: flex-end; /* Přilepí modal naspod pro mobilní vzhled */
@@ -181,11 +253,13 @@ body {
 
 #modal-search {
     width: 100%;
-    padding: 0.8rem 1rem;
-    border: 2px solid #E0E0E0;
+    padding: 1rem 1.25rem;
+    border: 2px solid #f1f5f9;
     border-radius: var(--radius);
     font-size: 1rem;
     outline: none;
+    background-color: #f8fafc;
+    transition: border-color 0.2s;
 }
 
 #modal-search:focus {
@@ -223,10 +297,17 @@ body {
     background-color: var(--bg-card);
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #f1f5f9;
+}
+
+.recipe-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
 }
 
 .recipe-img {
@@ -236,7 +317,7 @@ body {
 }
 
 .recipe-info {
-    padding: 1rem;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -247,15 +328,23 @@ body {
     color: var(--text-muted);
 }
 
+.recipe-info h3 {
+    font-size: 1.1rem;
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
+}
+
 .btn-fav {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
     border: none;
     padding: 0.5rem;
     border-radius: 50%;
     cursor: pointer;
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-fav.active i {
@@ -322,11 +411,22 @@ body {
     background-color: var(--primary);
     color: white;
     border: none;
-    padding: 0.8rem;
-    border-radius: var(--radius);
+    padding: 1.1rem;
+    border-radius: 18px;
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
 }
 
 .btn-icon-outline {
@@ -368,12 +468,16 @@ body {
     left: 0;
     right: 0;
     height: 4rem;
-    background-color: var(--bg-card);
-    border-top: 1px solid #E0E0E0;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(4.5rem + env(safe-area-inset-bottom));
 }
 
 .nav-item {
