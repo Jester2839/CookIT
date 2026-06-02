@@ -53,8 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time filtrování
     modalSearch.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        const filtered = DATABASE_INGREDIENTS.filter(ing => ing.toLowerCase().includes(query));
+        const query = e.target.value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        const filtered = DATABASE_INGREDIENTS.filter(ing => {
+            const normalizedIng = ing.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+            return normalizedIng.includes(query);
+        });
         renderModalList(filtered);
     });
 
