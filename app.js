@@ -211,7 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Nastavení stavu srdíčka v detailu
         const isFav = favorites.some(f => f.id === recipe.id);
         detailFavBtn.classList.toggle('active', isFav);
-        detailFavBtn.innerHTML = `<i class="${isFav ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>`;
+        const favIcon = detailFavBtn.querySelector('i');
+        if (favIcon) {
+            favIcon.className = isFav ? 'ph-fill ph-heart' : 'ph ph-heart';
+        }
 
         // Kliknutí na srdíčko v detailu
         detailFavBtn.onclick = () => {
@@ -264,7 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const buttons = document.querySelectorAll(`.btn-fav[data-id="${recipeId}"], #detail-fav-btn`);
         buttons.forEach(btn => {
             btn.classList.toggle('active', isActive);
-            btn.innerHTML = `<i class="${isActive ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>`;
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isActive ? 'ph-fill ph-heart' : 'ph ph-heart';
+            }
         });
     }
 

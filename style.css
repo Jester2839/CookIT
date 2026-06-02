@@ -347,8 +347,19 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-.btn-fav.active i {
-    color: #ff4757; /* Červená pro aktivní srdíčko */
+.btn-fav i, 
+#detail-fav-btn i {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease;
+}
+
+.btn-fav.active i,
+#detail-fav-btn.active i {
+    color: #ef4444; /* Sjednocená moderní červená */
+}
+
+.btn-fav:active i, 
+#detail-fav-btn:active i {
+    transform: scale(1.3);
 }
 
 /* Detail receptu v modalu */
@@ -437,6 +448,10 @@ body {
     display: flex;
     align-items: center;
     color: var(--text-muted);
+}
+
+.btn-icon-outline.active {
+    color: #ef4444;
 }
 
 .btn-primary:hover {
