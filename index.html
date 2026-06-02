@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CookIT – Chytrý pomocník v kuchyni</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <header class="app-header">
+        <h1>CookIT</h1>
+        <span class="badge-offline" id="offlineIndicator" style="display: none;">Offline režim</span>
+    </header>
+
+    <main class="app-content">
+        
+        <section id="search-section" class="tab-content active">
+            <div class="search-container">
+                <div class="search-header">
+                    <label>Co máš dnes v lednici?</label>
+                    <button id="btn-add-ingredient" class="btn-icon">+</button>
+                </div>
+                
+                <div id="tags-container" class="ingredients-tags">
+                </div>
+                <button id="btn-search" class="btn-primary">Najít recepty</button>
+            </div>
+
+            <div id="recipes-grid" class="recipes-grid">
+                <article class="recipe-card">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500" alt="Těstoviny s pestem" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Těstoviny s pestem</h3>
+                        <p class="recipe-nutrition">🔥 450 kcal</p>
+                        <button class="btn-fav">❤️</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="favorites-section" class="tab-content">
+            <h2>Moje oblíbené recepty</h2>
+            <div id="favorites-grid" class="recipes-grid">
+                </div>
+        </section>
+
+        <section id="shopping-section" class="tab-content">
+            <h2>Nákupní seznam</h2>
+            <ul id="shopping-list" class="shopping-list">
+                </ul>
+        </section>
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-target="search-section">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Hledat</span>
+        </button>
+        <button class="nav-item" data-target="favorites-section">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">Oblíbené</span>
+        </button>
+        <button class="nav-item" data-target="shopping-section">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-label">Nákup</span>
+        </button>
+    </nav>
+
+    <!-- Modal pro výběr ingrediencí -->
+    <div id="ingredient-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Přidat surovinu</h2>
+                <button id="btn-close-modal" class="btn-close">&times;</button>
+            </div>
+            <input type="text" id="modal-search" placeholder="Vyhledat surovinu...">
+            <ul id="modal-ingredient-list" class="modal-list">
+                <!-- Zde se vygenerují položky přes JS -->
+            </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
