@@ -1,15 +1,15 @@
 /* Globální resety a proměnné */
 :root {
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --bg-main: #f8fafc;
-    --bg-card: #FFFFFF;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
+    --primary: #3C6867;       /* Tvoje hlavní barva */
+    --primary-dark: #284E4D;  /* Tmavší odstín pro hover */
+    --bg-main: #f1f5f9;       /* Světlé, čisté pozadí stránky */
+    --bg-card: #ffffff;       /* Bílé karty pro maximální přehlednost */
+    --text-main: #09312F;     /* Tvoje nejtmavší barva pro text */
+    --text-muted: #5A807F;    /* Sage barva pro doplňkové texty */
     --danger-light: #FFEBEE;
     --danger-text: #C62828;
-    --success-light: #ecfdf5;
-    --success-text: #065f46;
+    --success-light: #f0f4f4; /* Velmi světlý nádech tvé palety */
+    --success-text: #3C6867;
     --radius: 16px;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
@@ -45,7 +45,7 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     padding: 0.75rem 1.5rem;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -100,11 +100,11 @@ body {
 
 /* Vyhledávání a Autocomplete */
 .search-container {
-    background: white;
+    background: #ffffff;
     padding: 1.5rem;
     border-radius: 24px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
+    border: 1px solid #e2e8f0;
     margin-bottom: 2.5rem;
     display: flex;
     flex-direction: column;
@@ -150,7 +150,7 @@ body {
     cursor: pointer;
     line-height: 0;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 12px rgba(60, 104, 103, 0.3);
 }
 
 .btn-add-circle i {
@@ -193,8 +193,8 @@ body {
 }
 
 .tag {
-    background-color: #f1f5f9;
-    color: var(--text-main);
+    background-color: var(--success-light);
+    color: var(--primary);
     padding: 0.5rem 0.8rem;
     border-radius: 10px;
     font-size: 0.9rem;
@@ -227,7 +227,7 @@ body {
 }
 
 .modal-content {
-    background-color: var(--bg-main);
+    background-color: #ffffff;
     width: 100%;
     height: 75vh;
     border-radius: 20px 20px 0 0;
@@ -261,11 +261,12 @@ body {
 #modal-search {
     width: 100%;
     padding: 1rem 1.25rem;
-    border: 2px solid #f1f5f9;
+    border: 2px solid #e2e8f0;
     border-radius: var(--radius);
     font-size: 1rem;
     outline: none;
     background-color: #f8fafc;
+    color: var(--text-main);
     transition: border-color 0.2s;
 }
 
@@ -283,7 +284,7 @@ body {
 
 .modal-list li {
     padding: 1rem 0.5rem;
-    border-bottom: 1px solid #E0E0E0;
+    border-bottom: 1px solid #f1f5f9;
     cursor: pointer;
     transition: background-color 0.2s;
 }
@@ -309,7 +310,7 @@ body {
     flex-direction: column;
     position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid #f1f5f9;
+    border: 1px solid #e2e8f0;
 }
 
 .recipe-card:hover {
@@ -408,7 +409,7 @@ body {
     background: var(--bg-card);
     padding: 0.8rem;
     border-radius: var(--radius);
-    border: 1px solid #EEE;
+    border: 1px solid #f1f5f9;
     text-align: center;
 }
 
@@ -435,7 +436,7 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(60, 104, 103, 0.2);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -444,7 +445,7 @@ body {
 
 .btn-primary:active {
     transform: scale(0.98);
-    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(60, 104, 103, 0.1);
 }
 
 .btn-icon-outline {
@@ -493,7 +494,7 @@ body {
     background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(226, 232, 240, 0.8);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-around;
     align-items: center;
