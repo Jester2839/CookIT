@@ -1,26 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. Přepínání záložek ve spodním menu
+    // --- 1. STAVOVÉ PROMĚNNÉ ---
+    let selectedIngredients = [];
+    let favorites = JSON.parse(localStorage.getItem('cookit_favorites')) || [];
+    let debounceTimer; 
+
+    // --- 2. DOM ELEMENTY ---
+    // Navigace
     const navItems = document.querySelectorAll('.nav-item');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(n => n.classList.remove('active'));
-            tabContents.forEach(t => t.classList.remove('active'));
-
-            item.classList.add('active');
-            const targetId = item.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active');
-
-            // Pokud uživatel klikne na Oblíbené, překreslíme je
-            if (targetId === 'favorites-section') {
-                renderFavorites();
-            }
-        });
-    });
-
-    // 2. Logika modálního okna pro ingredience
+    // Modal pro ingredience
     const modal = document.getElementById('ingredient-modal');
     const btnAdd = document.getElementById('btn-add-ingredient');
     const btnClose = document.getElementById('btn-close-modal');
@@ -31,11 +21,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipesGrid = document.getElementById('recipes-grid');
     const favoritesGrid = document.getElementById('favorites-grid');
 
-    let selectedIngredients = [];
-    // Načtení oblíbených z localStorage při startu
-    let favorites = JSON.parse(localStorage.getItem('cookit_favorites')) || [];
+    // Elementy pro detail receptu
+    const detailModal = document.getElementById('recipe-detail-modal');
+    const btnCloseDetail = document.getElementById('btn-close-detail');
+    const detailTitle = document.getElementById('detail-title');
+    const detailImg = document.getElementById('detail-img');
+    const detailNutrition = document.getElementById('detail-nutrition');
+    const detailIngredients = document.getElementById('detail-ingredients');
+    const detailInstructions = document.getElementById('detail-instructions');
+    const detailFavBtn = document.getElementById('detail-fav-btn');
 
-    let debounceTimer; // Pro ochranu proti vyčerpání API limitu
+    // --- 3. EVENT LISTENERY ---
+
+    // Přepínání záložek ve spodním menu
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navItems.forEach(n => n.classList.remove('active'));
+            tabContents.forEach(t => t.classList.remove('active'));
+
+            item.classList.add('active');
+            const targetId = item.getAttribute('data-target');
+            document.getElementById(targetId).classList.add('active');
+
+            if (targetId === 'favorites-section') {
+                renderFavorites();
+            }
+        });
+    });
+
+    btnCloseDetail.addEventListener('click', () => {
+        detailModal.classList.remove('active');
+    });
 
     // Otevření modalu
     btnAdd.addEventListener('click', () => {
@@ -159,6 +175,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function fetchRecipeDetail(id) {
+        detailModal.classList.add('active');
+        detailTitle.textContent = "Načítám...";
+        detailImg.src = "";
+        detailNutrition.innerHTML = "";
+        detailIngredients.innerHTML = "";
+        detailInstructions.innerHTML = "";
+
+        try {
+            const res = await fetch(`https://api.spoonacular.com/recipes/${id}/information?includeNutrition=true&apiKey=${API_KEY}`);
+            const recipe = await res.json();
+            
+            renderRecipeDetail(recipe);
+        } catch (error) {
+            console.error("Chyba při načítání detailu:", error);
+            detailTitle.textContent = "Chyba při načítání";
+        }
+    }
+
+    function renderRecipeDetail(recipe) {
+        detailTitle.textContent = recipe.title;
+        detailImg.src = recipe.image;
+
+        // Nastavení stavu srdíčka v detailu
+        const isFav = favorites.some(f => f.id === recipe.id);
+        detailFavBtn.classList.toggle('active', isFav);
+        detailFavBtn.innerHTML = `<i class="${isFav ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>`;
+
+        // Kliknutí na srdíčko v detailu
+        detailFavBtn.onclick = () => {
+            toggleFavorite(recipe, detailFavBtn);
+        };
+        
+        // 1. Nutriční hodnoty
+        const nutrients = recipe.nutrition.nutrients;
+        const important = ['Calories', 'Fat', 'Protein', 'Carbohydrates'];
+        detailNutrition.innerHTML = nutrients
+            .filter(n => important.includes(n.name))
+            .map(n => `
+                <div class="nutrition-item">
+                    <small style="display:block; color:var(--text-muted)">${n.name === 'Carbohydrates' ? 'Sacharidy' : n.name}</small>
+                    <strong>${Math.round(n.amount)} ${n.unit}</strong>
+                </div>
+            `).join('');
+
+        // 2. Ingredience
+        detailIngredients.innerHTML = recipe.extendedIngredients
+            .map(ing => `<li>${ing.original}</li>`).join('');
+
+        // 3. Postup
+        detailInstructions.innerHTML = recipe.instructions || "Postup bohužel není k dispozici.";
+    }
+
     // Funkce pro přepínání oblíbených
     function toggleFavorite(recipe, button) {
         const index = favorites.findIndex(f => f.id === recipe.id);
@@ -213,6 +282,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             `;
+
+            // Kliknutí na kartu (mimo srdíčko) otevře detail
+            article.addEventListener('click', () => {
+                fetchRecipeDetail(recipe.id);
+            });
 
             const btnFav = article.querySelector('.btn-fav');
             btnFav.addEventListener('click', (e) => {

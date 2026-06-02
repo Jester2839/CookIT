@@ -262,6 +262,61 @@ body {
     color: #ff4757; /* Červená pro aktivní srdíčko */
 }
 
+/* Detail receptu v modalu */
+.detail-content {
+    height: 100dvh;
+    border-radius: 0;
+}
+
+.detail-body {
+    overflow-y: auto;
+    padding-bottom: 2rem;
+}
+
+.detail-hero-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+}
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: var(--text-main);
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+}
+
+.nutrition-item {
+    background: var(--bg-card);
+    padding: 0.8rem;
+    border-radius: var(--radius);
+    border: 1px solid #EEE;
+    text-align: center;
+}
+
+.detail-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.instructions-text {
+    line-height: 1.7;
+    color: var(--text-main);
+}
+
 /* Tlačítka */
 .btn-primary {
     background-color: var(--primary);
@@ -272,6 +327,16 @@ body {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
+}
+
+.btn-icon-outline {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
 }
 
 .btn-primary:hover {

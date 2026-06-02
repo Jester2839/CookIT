@@ -57,7 +57,7 @@
             <span class="nav-label">Hledat</span>
         </button>
         <button class="nav-item" data-target="favorites-section">
-            <i class="ph ph-star nav-icon"></i>
+            <i class="ph ph-heart nav-icon"></i>
             <span class="nav-label">Oblíbené</span>
         </button>
         <button class="nav-item" data-target="shopping-section">
@@ -82,7 +82,42 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Modal pro detail receptu -->
+    <div id="recipe-detail-modal" class="modal">
+        <div class="modal-content detail-content">
+            <div class="modal-header">
+                <button id="btn-close-detail" class="btn-close">
+                    <i class="ph ph-arrow-left"></i>
+                </button>
+                <h2 id="detail-title">Načítání...</h2>
+                <button id="detail-fav-btn" class="btn-icon-outline">
+                    <i class="ph ph-heart"></i>
+                </button>
+            </div>
+            <div class="detail-body">
+                <img id="detail-img" src="" alt="" class="detail-hero-img">
+                
+                <div class="detail-section">
+                    <h3>Nutriční hodnoty</h3>
+                    <div id="detail-nutrition" class="nutrition-grid">
+                        <!-- Zde se vygenerují živiny -->
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Ingredience</h3>
+                    <ul id="detail-ingredients" class="detail-list"></ul>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Postup přípravy</h3>
+                    <div id="detail-instructions" class="instructions-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
