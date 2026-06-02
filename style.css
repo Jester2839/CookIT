@@ -90,6 +90,8 @@ body {
     border-radius: 50%;
     font-size: 1.5rem;
     display: flex;
+    line-height: 1;
+    padding-bottom: 3px; /* Optické vycentrování pluska směrem nahoru */
     justify-content: center;
     align-items: center;
     cursor: pointer;
