@@ -6,11 +6,15 @@
     <title>CookIT – Chytrý pomocník v kuchyni</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
 
     <header class="app-header">
-        <h1>CookIT</h1>
+        <div class="header-logo">
+            <img src="img/icon.png" alt="CookIT Logo">
+            <h1>CookIT</h1>
+        </div>
         <span class="badge-offline" id="offlineIndicator" style="display: none;">Offline režim</span>
     </header>
 
@@ -20,7 +24,9 @@
             <div class="search-container">
                 <div class="search-header">
                     <label>Co máš dnes v lednici?</label>
-                    <button id="btn-add-ingredient" class="btn-icon">+</button>
+                    <button id="btn-add-ingredient" class="btn-icon">
+                        <i class="ph ph-plus"></i>
+                    </button>
                 </div>
                 
                 <div id="tags-container" class="ingredients-tags">
@@ -29,9 +35,6 @@
             </div>
 
             <div id="recipes-grid" class="recipes-grid">
-                <p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); margin-top: 2rem;">
-                    Zadej, co máš v lednici, a my ti najdeme recept!
-                </p>
             </div>
         </section>
 
@@ -50,15 +53,15 @@
 
     <nav class="bottom-nav">
         <button class="nav-item active" data-target="search-section">
-            <span class="nav-icon">🔍</span>
+            <i class="ph ph-magnifying-glass nav-icon"></i>
             <span class="nav-label">Hledat</span>
         </button>
         <button class="nav-item" data-target="favorites-section">
-            <span class="nav-icon">⭐</span>
+            <i class="ph ph-star nav-icon"></i>
             <span class="nav-label">Oblíbené</span>
         </button>
         <button class="nav-item" data-target="shopping-section">
-            <span class="nav-icon">🛒</span>
+            <i class="ph ph-shopping-cart nav-icon"></i>
             <span class="nav-label">Nákup</span>
         </button>
     </nav>
@@ -68,7 +71,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Přidat surovinu</h2>
-                <button id="btn-close-modal" class="btn-close">&times;</button>
+                <button id="btn-close-modal" class="btn-close">
+                    <i class="ph ph-x"></i>
+                </button>
             </div>
             <input type="text" id="modal-search" placeholder="Vyhledat surovinu...">
             <ul id="modal-ingredient-list" class="modal-list">
@@ -78,5 +83,6 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="config.js"></script>
 </body>
 </html>

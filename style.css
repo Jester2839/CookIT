@@ -41,6 +41,17 @@ body {
     align-items: center;
 }
 
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.header-logo img {
+    height: 44px;
+    width: auto;
+}
+
 .badge-offline {
     background-color: #E67E22;
     color: white;
@@ -88,10 +99,8 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     display: flex;
-    line-height: 1;
-    padding-bottom: 3px; /* Optické vycentrování pluska směrem nahoru */
     justify-content: center;
     align-items: center;
     cursor: pointer;
