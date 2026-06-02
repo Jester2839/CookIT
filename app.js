@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Kliknutí na srdíčko v detailu
         detailFavBtn.onclick = () => {
-            toggleFavorite(recipe, detailFavBtn);
+            toggleFavorite(recipe);
         };
         
         // 1. Nutriční hodnoty
@@ -229,28 +229,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Funkce pro přepínání oblíbených
-    function toggleFavorite(recipe, button) {
+    function toggleFavorite(recipe) {
         const index = favorites.findIndex(f => f.id === recipe.id);
+        const isNowFav = index === -1;
         
-        if (index > -1) {
-            // Odstranit z oblíbených
+        if (!isNowFav) {
             favorites.splice(index, 1);
-            button.classList.remove('active');
-            button.innerHTML = '<i class="ph ph-heart"></i>';
         } else {
-            // Přidat do oblíbených
             favorites.push(recipe);
-            button.classList.add('active');
-            button.innerHTML = '<i class="ph-fill ph-heart"></i>';
         }
 
-        // Uložit do localStorage
         localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
         
+        // Synchronizace VŠECH srdíček pro tento recept (na kartách i v detailu)
+        updateHeartIcons(recipe.id, isNowFav);
+
         // Pokud jsme zrovna v sekci oblíbených, rovnou to překreslíme
         if (document.getElementById('favorites-section').classList.contains('active')) {
             renderFavorites();
         }
+    }
+
+    function updateHeartIcons(recipeId, isActive) {
+        const buttons = document.querySelectorAll(`.btn-fav[data-id="${recipeId}"], #detail-fav-btn`);
+        buttons.forEach(btn => {
+            btn.classList.toggle('active', isActive);
+            btn.innerHTML = `<i class="${isActive ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>`;
+        });
     }
 
     function renderFavorites() {
@@ -277,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="recipe-nutrition">
                         ${recipe.missedIngredientCount !== undefined ? `Chybí suroviny: ${recipe.missedIngredientCount}` : 'Uložený recept'}
                     </p>
-                    <button class="btn-fav ${isFav ? 'active' : ''}">
+                    <button class="btn-fav ${isFav ? 'active' : ''}" data-id="${recipe.id}">
                         <i class="${isFav ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>
                     </button>
                 </div>
@@ -291,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnFav = article.querySelector('.btn-fav');
             btnFav.addEventListener('click', (e) => {
                 e.stopPropagation();
-                toggleFavorite(recipe, btnFav);
+                toggleFavorite(recipe);
             });
 
             container.appendChild(article);
