@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalList = document.getElementById('modal-ingredient-list');
     const tagsContainer = document.getElementById('tags-container');
     const btnSearch = document.getElementById('btn-search');
+    const searchContainer = document.querySelector('.search-container');
     const recipesGrid = document.getElementById('recipes-grid');
     const favoritesGrid = document.getElementById('favorites-grid');
 
@@ -30,6 +31,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailIngredients = document.getElementById('detail-ingredients');
     const detailInstructions = document.getElementById('detail-instructions');
     const detailFavBtn = document.getElementById('detail-fav-btn');
+
+    // --- DETEKCE STICKY STAVU ---
+    const observer = new IntersectionObserver(
+        ([e]) => {
+            // Třída is-sticky se přidá, pokud element narazí na horní hranu (intersectionRatio < 1)
+            e.target.classList.toggle('is-sticky', e.intersectionRatio < 1);
+        },
+        { threshold: [1] }
+    );
+
+    if (searchContainer) observer.observe(searchContainer);
 
     // --- 3. EVENT LISTENERY ---
 
@@ -180,8 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const recipes = await response.json();
             renderRecipes(recipes, recipesGrid);
         } catch (error) {
-            console.error("Chyba:", error);
-            recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Došlo k chybě při načítání receptů. Zkontroluj API klíč.</p>';
+            console.error("Chyba při stahování receptů:", error);
+            alert("Došlo k chybě při načítání nových receptů. API limit je pravděpodobně vyčerpán.");
         }
     }
 
@@ -278,6 +290,26 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRecipes(favorites, favoritesGrid);
     }
 
+    // --- DELEGACE KLIKNUTÍ PRO GRID (pro statické i dynamické karty) ---
+    function handleGridClick(e, grid) {
+        const card = e.target.closest('.recipe-card');
+        if (!card) return;
+
+        const recipeId = card.dataset.id;
+        const btnFav = e.target.closest('.btn-fav');
+
+        if (btnFav) {
+            e.stopPropagation();
+            // Pro statické karty musíme vytvořit aspoň základní objekt
+            toggleFavorite({ id: parseInt(recipeId), title: card.querySelector('h3').textContent, image: card.querySelector('img').src });
+        } else {
+            fetchRecipeDetail(recipeId);
+        }
+    }
+
+    recipesGrid.addEventListener('click', (e) => handleGridClick(e, recipesGrid));
+    favoritesGrid.addEventListener('click', (e) => handleGridClick(e, favoritesGrid));
+
     // Univerzální vykreslení receptů do mřížky
     function renderRecipes(recipes, container) {
         container.innerHTML = '';
@@ -303,17 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             `;
-
-            // Kliknutí na kartu (mimo srdíčko) otevře detail
-            article.addEventListener('click', () => {
-                fetchRecipeDetail(recipe.id);
-            });
-
-            const btnFav = article.querySelector('.btn-fav');
-            btnFav.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleFavorite(recipe);
-            });
 
             container.appendChild(article);
         });

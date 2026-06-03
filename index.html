@@ -17,7 +17,7 @@
     <header class="app-header">
         <div class="header-logo">
             <div class="logo-icon"></div>
-            <h1>CookIT</h1>
+            <h1>Cook<span>IT</span></h1>
         </div>
         <span class="badge-offline" id="offlineIndicator" style="display: none;">Offline režim</span>
     </header>
@@ -27,18 +27,19 @@
         <section id="search-section" class="tab-content active">
             <div class="search-container">
                 <div class="search-header">
-                    <div class="search-header-row">
-                        <label>Moje ingredience</label>
-                        <button id="btn-add-ingredient" class="btn-add-circle" title="Přidat surovinu">
-                            <i class="ph ph-plus"></i>
-                        </button>
-                    </div>
+                    <label>Moje ingredience</label>
                     <p>Vyberte suroviny, které chcete použít k vaření.</p>
                 </div>
                 
-                <div id="tags-container" class="ingredients-tags">
-                    <!-- Dynamický obsah přes JS -->
+                <div class="search-main-row">
+                    <div id="tags-container" class="ingredients-tags">
+                        <!-- Dynamický obsah přes JS -->
+                    </div>
+                    <button id="btn-add-ingredient" class="btn-add-circle" title="Přidat surovinu">
+                        <i class="ph ph-plus"></i>
+                    </button>
                 </div>
+
                 <button id="btn-search" class="btn-primary">
                     <i class="ph ph-cooking-pot"></i>
                     Najít recepty
@@ -46,6 +47,55 @@
             </div>
 
             <div id="recipes-grid" class="recipes-grid">
+                <!-- Dočasné statické karty pro ukázku -->
+                <article class="recipe-card" data-id="716429">
+                    <img src="https://images.unsplash.com/photo-1598866594230-a7c12756260f?q=80&w=500" alt="Těstoviny" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Těstoviny s rajčatovou omáčkou</h3>
+                        <p class="recipe-nutrition">Chybí suroviny: 0</p>
+                        <button class="btn-fav" data-id="716429"><i class="ph ph-heart"></i></button>
+                    </div>
+                </article>
+                <article class="recipe-card" data-id="715538">
+                    <img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=500" alt="Polévka" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Vydatná zeleninová polévka</h3>
+                        <p class="recipe-nutrition">Chybí suroviny: 2</p>
+                        <button class="btn-fav" data-id="715538"><i class="ph ph-heart"></i></button>
+                    </div>
+                </article>
+                <article class="recipe-card" data-id="715415">
+                    <img src="https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=500" alt="Kuře" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Pečené kuře s bylinkami</h3>
+                        <p class="recipe-nutrition">Chybí suroviny: 1</p>
+                        <button class="btn-fav" data-id="715415"><i class="ph ph-heart"></i></button>
+                    </div>
+                </article>
+                <article class="recipe-card" data-id="644387">
+                    <img src="https://images.unsplash.com/photo-1559739511-e9404f52639b?q=80&w=500" alt="Krevety" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Česnekové krevety na másle</h3>
+                        <p class="recipe-nutrition">Chybí suroviny: 0</p>
+                        <button class="btn-fav" data-id="644387"><i class="ph ph-heart"></i></button>
+                    </div>
+                </article>
+                <article class="recipe-card" data-id="633344">
+                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=500" alt="Burger" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Domácí hovězí burger</h3>
+                        <p class="recipe-nutrition">Chybí suroviny: 3</p>
+                        <button class="btn-fav" data-id="633344"><i class="ph ph-heart"></i></button>
+                    </div>
+                </article>
+                <article class="recipe-card" data-id="654812">
+                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=500" alt="Salát" class="recipe-img">
+                    <div class="recipe-info">
+                        <h3>Svěží letní salát</h3>
+                        <p class="recipe-nutrition">Chybí suroviny: 0</p>
+                        <button class="btn-fav" data-id="654812"><i class="ph ph-heart"></i></button>
+                    </div>
+                </article>
             </div>
         </section>
 
