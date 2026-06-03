@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagsContainer = document.getElementById('tags-container');
     const btnSearch = document.getElementById('btn-search');
     const searchContainer = document.querySelector('.search-container');
+    const searchSentinel = document.getElementById('search-sentinel');
+    const searchPlaceholder = document.getElementById('search-placeholder');
     const recipesGrid = document.getElementById('recipes-grid');
     const favoritesGrid = document.getElementById('favorites-grid');
 
@@ -37,13 +39,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DETEKCE STICKY STAVU ---
     const observer = new IntersectionObserver(
         ([e]) => {
-            // Třída is-sticky se přidá, pokud element narazí na horní hranu (intersectionRatio < 1)
-            e.target.classList.toggle('is-sticky', e.intersectionRatio < 1);
+            if (!e.isIntersecting && e.boundingClientRect.top < 0) {
+                // Zmizel za horním okrajem (odscrollovali jsme dolů)
+                if (!searchContainer.classList.contains('is-sticky')) {
+                    const oldHeight = searchContainer.offsetHeight;
+                    searchContainer.classList.add('is-sticky');
+                    const newHeight = searchContainer.offsetHeight;
+                    
+                    // Zkompenzujeme ztracenou výšku zástupným elementem
+                    if (oldHeight > newHeight) {
+                        searchPlaceholder.style.height = `${oldHeight - newHeight}px`;
+                    }
+                }
+            } else if (e.isIntersecting) {
+                // Vrátil se na obrazovku (jsme zpět nahoře)
+                searchContainer.classList.remove('is-sticky');
+                searchPlaceholder.style.height = '0px';
+            }
         },
-        { threshold: [1] }
+        { threshold: [0] }
     );
 
-    if (searchContainer) observer.observe(searchContainer);
+    if (searchSentinel) observer.observe(searchSentinel);
 
     // --- 3. EVENT LISTENERY ---
 

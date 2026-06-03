@@ -119,23 +119,27 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    position: sticky;
-    top: -1px; /* Pro detekci intersection */
+    position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 90;
 }
 
 /* Sticky stav karty */
 .search-container.is-sticky {
-    padding: 0.75rem 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 800px;
+    padding: 0.75rem 1.5rem;
     border-radius: 0 0 20px 20px;
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    width: calc(100% + 3rem);
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: none;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     gap: 0;
 }
@@ -442,6 +446,42 @@ body {
     border-radius: 0;
 }
 
+/* Vylepšená hlavička detailu receptu */
+#recipe-detail-modal .modal-header {
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+#recipe-detail-modal .modal-header h2 {
+    flex: 1;
+    text-align: center;
+    font-size: 1.2rem;
+    line-height: 1.3;
+    /* Omezení extrémně dlouhého textu na max 2 řádky */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#recipe-detail-modal .modal-header .btn-close,
+#recipe-detail-modal .modal-header .btn-icon-outline {
+    flex-shrink: 0; /* Zabrání smrsknutí tlačítek pod náporem textu */
+    width: 44px;
+    height: 44px;
+    background-color: var(--bg-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+}
+
+#recipe-detail-modal .modal-header .btn-close {
+    font-size: 1.4rem;
+}
+
 .detail-body {
     overflow-y: auto;
     padding: 0 0.5rem 4rem 0.5rem;
@@ -456,13 +496,33 @@ body {
 }
 
 .detail-section {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .detail-section h3 {
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    color: var(--text-main);
+    margin-bottom: 1.25rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.detail-section h3::before {
+    content: "";
+    width: 24px; /* Krátká linka zleva */
+    height: 3px;
+    background-color: var(--success-light);
+    border-radius: 3px;
+}
+
+.detail-section h3::after {
+    content: "";
+    flex: 1;
+    height: 3px;
+    background-color: var(--success-light);
+    border-radius: 3px;
 }
 
 .nutrition-grid {
@@ -475,7 +535,7 @@ body {
     background: var(--bg-card);
     padding: 0.8rem;
     border-radius: var(--radius);
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--primary);
     text-align: center;
 }
 

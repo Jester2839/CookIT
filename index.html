@@ -25,6 +25,8 @@
     <main class="app-content">
         
         <section id="search-section" class="tab-content active">
+            <!-- Neviditelný bod pro detekci scrollování (zamezuje zasekávání) -->
+            <div id="search-sentinel"></div>
             <div class="search-container">
                 <div class="search-header">
                     <label>Moje ingredience</label>
@@ -45,10 +47,13 @@
                     Najít recepty
                 </button>
             </div>
+            
+            <!-- Zástupný element pro vyrovnání výšky při zmenšení vyhledávání (prevence loopu) -->
+            <div id="search-placeholder"></div>
 
             <div id="recipes-grid" class="recipes-grid">
                 <!-- Dočasné statické karty pro ukázku -->
-                <article class="recipe-card" data-id="716429">
+                <!-- <article class="recipe-card" data-id="716429">
                     <img src="https://images.unsplash.com/photo-1598866594230-a7c12756260f?q=80&w=500" alt="Těstoviny" class="recipe-img">
                     <div class="recipe-info">
                         <h3>Těstoviny s rajčatovou omáčkou</h3>
@@ -95,7 +100,7 @@
                         <p class="recipe-nutrition">Chybí suroviny: 0</p>
                         <button class="btn-fav" data-id="654812"><i class="ph ph-heart"></i></button>
                     </div>
-                </article>
+                </article> -->
             </div>
         </section>
 
