@@ -1,5 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
     
+    // --- 0. PWA & OFFLINE STAV ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker úspěšně registrován s rozsahem:', reg.scope))
+            .catch(err => console.error('Registrace Service Workeru selhala:', err));
+    }
+
+    const offlineIndicator = document.getElementById('offlineIndicator');
+    
+    function updateOnlineStatus() {
+        if (!offlineIndicator) return;
+        if (navigator.onLine) {
+            offlineIndicator.style.display = 'none';
+        } else {
+            offlineIndicator.style.display = 'block';
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus(); // Okamžitá kontrola po načtení
+    
     // --- 1. STAVOVÉ PROMĚNNÉ ---
     let selectedIngredients = [];
     // Načtení a okamžitá filtrace poškozených dat (odstranění záznamů s null/NaN ID)
