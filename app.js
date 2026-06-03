@@ -2,7 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. STAVOVÉ PROMĚNNÉ ---
     let selectedIngredients = [];
-    let favorites = JSON.parse(localStorage.getItem('cookit_favorites')) || [];
+    // Načtení a okamžitá filtrace poškozených dat (odstranění záznamů s null/NaN ID)
+    let favorites = (JSON.parse(localStorage.getItem('cookit_favorites')) || [])
+        .filter(f => f && f.id !== null && f.id !== undefined && !isNaN(Number(f.id)));
     let debounceTimer; 
 
     // --- 2. DOM ELEMENTY ---
@@ -198,15 +200,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchRecipeDetail(id) {
+        // Obrana proti neplatným ID (např. "null" jako řetězec z datasetu)
+        if (!id || id === 'null' || id === 'undefined') return;
+
         detailModal.classList.add('active');
         detailTitle.textContent = "Načítám...";
         detailImg.src = "";
         detailNutrition.innerHTML = "";
         detailIngredients.innerHTML = "";
         detailInstructions.innerHTML = "";
-
+        
         try {
             const res = await fetch(`https://api.spoonacular.com/recipes/${id}/information?includeNutrition=true&apiKey=${API_KEY}`);
+            if (!res.ok) throw new Error('Nepodařilo se načíst data z API (možná neplatné ID nebo limit)');
+            
             const recipe = await res.json();
             
             renderRecipeDetail(recipe);
@@ -235,39 +242,62 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 1. Nutriční hodnoty
         const nutrients = recipe.nutrition.nutrients;
-        const important = ['Calories', 'Fat', 'Protein', 'Carbohydrates'];
+        const translations = {
+            'Calories': 'Kalorie',
+            'Fat': 'Tuky',
+            'Protein': 'Bílkoviny',
+            'Carbohydrates': 'Sacharidy'
+        };
+        const important = Object.keys(translations);
+
         detailNutrition.innerHTML = nutrients
             .filter(n => important.includes(n.name))
             .map(n => `
                 <div class="nutrition-item">
-                    <small style="display:block; color:var(--text-muted)">${n.name === 'Carbohydrates' ? 'Sacharidy' : n.name}</small>
+                    <small style="display:block; color:var(--text-muted)">${translations[n.name] || n.name}</small>
                     <strong>${Math.round(n.amount)} ${n.unit}</strong>
                 </div>
             `).join('');
 
         // 2. Ingredience
         detailIngredients.innerHTML = recipe.extendedIngredients
-            .map(ing => `<li>${ing.original}</li>`).join('');
+            .map(ing => `<li>${ing.original || ing.name}</li>`).join('');
 
         // 3. Postup
-        detailInstructions.innerHTML = recipe.instructions || "Postup bohužel není k dispozici.";
+        let instructionsHTML = "<p>Postup bohužel není k dispozici.</p>";
+        
+        // Preferujeme analyzovaný postup rozdělený na kroky
+        if (recipe.analyzedInstructions && recipe.analyzedInstructions.length > 0) {
+            const steps = recipe.analyzedInstructions[0].steps;
+            instructionsHTML = '<ol>' + steps.map(s => `<li>${s.step}</li>`).join('') + '</ol>';
+        } else if (recipe.instructions) {
+            instructionsHTML = recipe.instructions.includes('<') ? recipe.instructions : `<div>${recipe.instructions}</div>`;
+        }
+        detailInstructions.innerHTML = instructionsHTML;
     }
 
     // Funkce pro přepínání oblíbených
     function toggleFavorite(recipe) {
-        const index = favorites.findIndex(f => f.id === recipe.id);
+        if (!recipe || recipe.id === null || recipe.id === undefined) return;
+        
+        // Vždy pracujeme s ID jako s číslem pro spolehlivé porovnání
+        const recipeId = Number(recipe.id);
+        if (isNaN(recipeId)) return;
+
+        const index = favorites.findIndex(f => Number(f.id) === recipeId);
         const isNowFav = index === -1;
         
         if (!isNowFav) {
             favorites.splice(index, 1);
         } else {
-            favorites.push(recipe);
+            // Uložíme kopii se zaručeným číselným ID
+            favorites.push({ ...recipe, id: recipeId });
         }
 
         localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
         
         // Synchronizace VŠECH srdíček pro tento recept (na kartách i v detailu)
-        updateHeartIcons(recipe.id, isNowFav);
+        updateHeartIcons(recipeId, isNowFav);
 
         // Pokud jsme zrovna v sekci oblíbených, rovnou to překreslíme
         if (document.getElementById('favorites-section').classList.contains('active')) {
@@ -276,14 +306,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateHeartIcons(recipeId, isActive) {
-        const buttons = document.querySelectorAll(`.btn-fav[data-id="${recipeId}"], #detail-fav-btn`);
-        buttons.forEach(btn => {
+        // Najdeme všechna tlačítka v mřížce podle data-id
+        const gridButtons = document.querySelectorAll(`.btn-fav[data-id="${recipeId}"]`);
+        const detailBtn = document.getElementById('detail-fav-btn');
+        
+        const updateBtn = (btn) => {
             btn.classList.toggle('active', isActive);
             const icon = btn.querySelector('i');
             if (icon) {
                 icon.className = isActive ? 'ph-fill ph-heart' : 'ph ph-heart';
             }
-        });
+        };
+
+        gridButtons.forEach(updateBtn);
+        if (detailBtn) updateBtn(detailBtn);
     }
 
     function renderFavorites() {
@@ -295,13 +331,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = e.target.closest('.recipe-card');
         if (!card) return;
 
-        const recipeId = card.dataset.id;
+        const recipeIdStr = card.dataset.id;
+        if (!recipeIdStr || recipeIdStr === 'null' || recipeIdStr === 'undefined') return;
+
+        const recipeId = Number(recipeIdStr);
         const btnFav = e.target.closest('.btn-fav');
 
         if (btnFav) {
             e.stopPropagation();
-            // Pro statické karty musíme vytvořit aspoň základní objekt
-            toggleFavorite({ id: parseInt(recipeId), title: card.querySelector('h3').textContent, image: card.querySelector('img').src });
+            toggleFavorite({ 
+                id: recipeId, 
+                title: card.querySelector('h3').textContent, 
+                image: card.querySelector('img').src 
+            });
         } else {
             fetchRecipeDetail(recipeId);
         }
@@ -323,11 +365,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const isFav = favorites.some(f => f.id === recipe.id);
             const article = document.createElement('article');
             article.className = 'recipe-card';
+            article.dataset.id = recipe.id;
+
             article.innerHTML = `
                 <img src="${recipe.image}" alt="${recipe.title}" class="recipe-img">
                 <div class="recipe-info">
                     <h3>${recipe.title}</h3>
-                    <p class="recipe-nutrition">
+                    <p class="recipe-nutrition" style="margin-bottom: 0.5rem">
                         ${recipe.missedIngredientCount !== undefined ? `Chybí suroviny: ${recipe.missedIngredientCount}` : 'Uložený recept'}
                     </p>
                     <button class="btn-fav ${isFav ? 'active' : ''}" data-id="${recipe.id}">
