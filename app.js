@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Načtení a okamžitá filtrace poškozených dat (odstranění záznamů s null/NaN ID)
     let favorites = (JSON.parse(localStorage.getItem('cookit_favorites')) || [])
         .filter(f => f && f.id !== null && f.id !== undefined && !isNaN(Number(f.id)));
+    let shoppingList = JSON.parse(localStorage.getItem('cookit_shopping_list')) || [];
+    
+    // Migrace starých textových dat na objekty (pro případ, že už tam něco máš z minula)
+    shoppingList = shoppingList.map(item => typeof item === 'string' ? { recipeTitle: 'Samostatně přidané', name: item } : item);
+
     let debounceTimer; 
 
     // --- 2. DOM ELEMENTY ---
@@ -76,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetId === 'favorites-section') {
                 renderFavorites();
+            } else if (targetId === 'shopping-section') {
+                renderShoppingList();
             }
         });
     });
@@ -236,7 +243,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderRecipeDetail(recipe);
         } catch (error) {
             console.error("Chyba při načítání detailu:", error);
-            detailTitle.textContent = "Chyba při načítání";
+            detailTitle.textContent = "Limit API vyčerpán";
+            detailInstructions.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--danger-text);">
+                <i class="ph ph-warning-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p><strong>Nepodařilo se načíst recept.</strong></p>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem;">Pravděpodobně byl vyčerpán denní limit u poskytovatele receptů (Spoonacular API). Zkuste to prosím zítra, nebo vložte nový API klíč.</p>
+            </div>`;
         }
     }
 
@@ -278,7 +290,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Ingredience
         detailIngredients.innerHTML = recipe.extendedIngredients
-            .map(ing => `<li>${ing.original || ing.name}</li>`).join('');
+            .map(ing => {
+                const ingName = ing.original || ing.name;
+                const safeIngName = ingName.replace(/"/g, '&quot;'); // Obrana proti rozbití HTML, kdyby název obsahoval uvozovky
+                // Nová kontrola – hledáme podle názvu i názvu receptu
+                const isInList = shoppingList.some(item => item.name === ingName && item.recipeTitle === recipe.title);
+                return `<li>
+                    <span class="ing-name" style="flex: 1;">${ingName}</span>
+                    <button class="btn-shop-toggle ${isInList ? 'active' : ''}" data-name="${safeIngName}" title="${isInList ? 'Odebrat z nákupního seznamu' : 'Přidat do nákupního seznamu'}">
+                        <i class="${isInList ? 'ph-fill ph-shopping-cart' : 'ph ph-shopping-cart'}"></i>
+                    </button>
+                </li>`;
+            }).join('');
 
         // 3. Postup
         let instructionsHTML = "<p>Postup bohužel není k dispozici.</p>";
@@ -292,6 +315,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         detailInstructions.innerHTML = instructionsHTML;
     }
+
+    // Delegovaná událost pro tlačítka "Přidat do nákupu" v detailu receptu
+    detailIngredients.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-shop-toggle');
+        if (!btn) return;
+
+        const ingName = btn.dataset.name;
+        const recipeTitle = detailTitle.textContent;
+        const index = shoppingList.findIndex(item => item.name === ingName && item.recipeTitle === recipeTitle);
+
+        if (index === -1) {
+            shoppingList.push({ recipeTitle, name: ingName });
+            btn.classList.add('active');
+            btn.querySelector('i').className = 'ph-fill ph-shopping-cart';
+            btn.title = 'Odebrat z nákupního seznamu';
+        } else {
+            shoppingList.splice(index, 1);
+            btn.classList.remove('active');
+            btn.querySelector('i').className = 'ph ph-shopping-cart';
+            btn.title = 'Přidat do nákupního seznamu';
+        }
+
+        localStorage.setItem('cookit_shopping_list', JSON.stringify(shoppingList));
+    });
 
     // Funkce pro přepínání oblíbených
     function toggleFavorite(recipe) {
@@ -398,6 +445,67 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             container.appendChild(article);
+        });
+    }
+
+    // --- NÁKUPNÍ SEZNAM ---
+    const shoppingListContainer = document.getElementById('shopping-list');
+    
+    function renderShoppingList() {
+        if (!shoppingListContainer) return;
+        shoppingListContainer.innerHTML = '';
+
+        if (shoppingList.length === 0) {
+            shoppingListContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">V nákupním seznamu zatím nemáš žádné suroviny.</p>';
+            return;
+        }
+
+        // Seskupení ingrediencí podle názvu receptu (tzv. "Dictionary" pattern)
+        const grouped = {};
+        shoppingList.forEach(item => {
+            if (!grouped[item.recipeTitle]) {
+                grouped[item.recipeTitle] = [];
+            }
+            grouped[item.recipeTitle].push(item.name);
+        });
+
+        // Vykreslení jednotlivých "kartiček" pro každý recept
+        for (const [recipeTitle, ingredients] of Object.entries(grouped)) {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'shopping-group';
+            
+            groupDiv.innerHTML = `
+                <h3 class="shopping-group-title">${recipeTitle}</h3>
+                <ul class="shopping-group-list">
+                    ${ingredients.map(ing => `
+                        <li>
+                            <span class="ing-name">${ing}</span>
+                            <button class="btn-remove-shop" data-title="${recipeTitle.replace(/"/g, '&quot;')}" data-name="${ing.replace(/"/g, '&quot;')}" title="Odebrat surovinu">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            shoppingListContainer.appendChild(groupDiv);
+        }
+    }
+
+    // Delegovaná událost pro mazání z nákupního seznamu
+    if (shoppingListContainer) {
+        shoppingListContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-remove-shop');
+            if (!btn) return;
+
+            const recipeTitle = btn.dataset.title;
+            const ingName = btn.dataset.name;
+
+            const index = shoppingList.findIndex(item => item.recipeTitle === recipeTitle && item.name === ingName);
+            if (index !== -1) {
+                shoppingList.splice(index, 1);
+                localStorage.setItem('cookit_shopping_list', JSON.stringify(shoppingList));
+                renderShoppingList(); // Překreslení seznamu po smazání
+            }
         });
     }
 });
