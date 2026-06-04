@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     shoppingList = shoppingList.map(item => typeof item === 'string' ? { recipeTitle: 'Samostatně přidané', name: item } : item);
 
     let debounceTimer; 
+    let currentFetchedRecipes = [];
+    let currentRenderLimit = 10;
 
     // --- 2. DOM ELEMENTY ---
     // Navigace
@@ -51,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchPlaceholder = document.getElementById('search-placeholder');
     const recipesGrid = document.getElementById('recipes-grid');
     const favoritesGrid = document.getElementById('favorites-grid');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const btnLoadMore = document.getElementById('btn-load-more');
 
     // Elementy pro detail receptu
     const detailModal = document.getElementById('recipe-detail-modal');
@@ -218,6 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchRecipesByIngredients();
     });
 
+    // --- TLAČÍTKO DALŠÍ RECEPTY ---
+    if (btnLoadMore) {
+        btnLoadMore.addEventListener('click', () => {
+            currentRenderLimit += 10;
+            renderCurrentBatch();
+        });
+    }
+
     // --- NOVÁ FUNKCE PRO HLEDÁNÍ RECEPTŮ ---
     async function fetchRecipesByIngredients() {
         if (!recipesGrid) return; 
@@ -230,17 +242,31 @@ document.addEventListener('DOMContentLoaded', () => {
         // Spojí ingredience čárkou pro API formát (např. "apples,+flour,+sugar")
         const ingredientsString = selectedIngredients.join(',+');
         recipesGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary);"></i><p style="margin-top: 1rem; color: var(--text-muted);">Hledám nejlepší recepty...</p></div>';
+        if (loadMoreContainer) loadMoreContainer.style.display = 'none';
 
         try {
-            // Volání API pro hledání podle ingrediencí
-            const response = await fetch(`https://api.spoonacular.com/recipes/findByIngredients?ingredients=${ingredientsString}&number=10&apiKey=${API_KEY}`);
+            // Stáhneme rovnou 30 receptů a uložíme do paměti (šetří to API volání pro stránkování)
+            const response = await fetch(`https://api.spoonacular.com/recipes/findByIngredients?ingredients=${ingredientsString}&number=30&apiKey=${API_KEY}`);
             if (!response.ok) throw new Error('Chyba při stahování receptů');
             
-            const recipes = await response.json();
-            renderRecipes(recipes, recipesGrid);
+            currentFetchedRecipes = await response.json();
+            currentRenderLimit = 10; // Reset limitu zobrazených receptů
+            
+            renderCurrentBatch();
         } catch (error) {
             console.error("Chyba při stahování receptů:", error);
             alert("Došlo k chybě při načítání nových receptů. API limit je pravděpodobně vyčerpán.");
+            recipesGrid.innerHTML = '';
+        }
+    }
+
+    function renderCurrentBatch() {
+        const recipesToShow = currentFetchedRecipes.slice(0, currentRenderLimit);
+        renderRecipes(recipesToShow, recipesGrid);
+        
+        // Ukázat tlačítko "Další recepty" jen pokud zbývají nenačtené
+        if (loadMoreContainer) {
+            loadMoreContainer.style.display = (currentRenderLimit < currentFetchedRecipes.length) ? 'flex' : 'none';
         }
     }
 
@@ -332,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const safeIngName = ingName.replace(/"/g, '&quot;'); // Obrana proti rozbití HTML, kdyby název obsahoval uvozovky
                 // Nová kontrola – hledáme podle názvu i názvu receptu
                 const isInList = shoppingList.some(item => item.name === ingName && item.recipeTitle === recipe.title);
-                return `<li>
+                return `<li class="${isInList ? 'in-cart-bg' : ''}">
                     <span class="ing-name" style="flex: 1;">${ingName}</span>
                     <button class="btn-shop-toggle ${isInList ? 'active' : ''}" data-name="${safeIngName}" title="${isInList ? 'Odebrat z nákupního seznamu' : 'Přidat do nákupního seznamu'}">
                         <i class="${isInList ? 'ph-fill ph-shopping-cart' : 'ph ph-shopping-cart'}"></i>
@@ -361,17 +387,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const ingName = btn.dataset.name;
         const recipeTitle = detailTitle.textContent;
         const index = shoppingList.findIndex(item => item.name === ingName && item.recipeTitle === recipeTitle);
+        const liElement = btn.closest('li');
 
         if (index === -1) {
             shoppingList.push({ recipeTitle, name: ingName });
             btn.classList.add('active');
             btn.querySelector('i').className = 'ph-fill ph-shopping-cart';
             btn.title = 'Odebrat z nákupního seznamu';
+            if (liElement) liElement.classList.add('in-cart-bg');
         } else {
             shoppingList.splice(index, 1);
             btn.classList.remove('active');
             btn.querySelector('i').className = 'ph ph-shopping-cart';
             btn.title = 'Přidat do nákupního seznamu';
+            if (liElement) liElement.classList.remove('in-cart-bg');
         }
 
         localStorage.setItem('cookit_shopping_list', JSON.stringify(shoppingList));
