@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const favoritesGrid = document.getElementById('favorites-grid');
     const loadMoreContainer = document.getElementById('load-more-container');
     const btnLoadMore = document.getElementById('btn-load-more');
+    const searchError = document.getElementById('search-error');
 
     // Elementy pro detail receptu
     const detailModal = document.getElementById('recipe-detail-modal');
@@ -174,6 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderModalList(ingredientNames);
             } catch (error) {
                 console.error("Nepodařilo se našeptat ingredience:", error);
+                modalList.innerHTML = `<li style="color: var(--danger-text); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 2rem 1rem;">
+                    <i class="ph ph-warning-circle" style="font-size: 2rem;"></i>
+                    <span>Chyba při načítání ingrediencí. Zkuste to prosím znovu.</span>
+                </li>`;
             }
         }, 500); 
     });
@@ -194,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!selectedIngredients.includes(ing)) {
                     selectedIngredients.push(ing);
                     renderTags();
+                    if (searchError) searchError.style.display = 'none'; // Skrýt chybovou hlášku, pokud tam byla
                 }
                 modal.classList.remove('active');
             });
@@ -244,10 +250,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!recipesGrid) return; 
 
         if (selectedIngredients.length === 0) {
-            alert('Nejdřív vyber aspoň jednu surovinu!');
+            if (searchError) {
+                searchError.innerHTML = '<i class="ph ph-warning-circle" style="font-size: 1.2rem;"></i> Nejdřív vyber aspoň jednu surovinu!';
+                searchError.style.display = 'flex';
+                
+                // Automatické skrytí chybové hlášky po 4 sekundách
+                setTimeout(() => {
+                    searchError.style.display = 'none';
+                }, 4000);
+            }
             return;
         }
 
+        if (searchError) searchError.style.display = 'none';
         recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Hledám ty nejlepší recepty...</p>';
         if (loadMoreContainer) loadMoreContainer.style.display = 'none';
 
@@ -262,14 +277,20 @@ document.addEventListener('DOMContentLoaded', () => {
             currentRenderLimit = 10; // Vždy začneme zobrazením prvních 10
             
             if (currentFetchedRecipes.length === 0) {
-                recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Bohužel jsme nenašli žádné recepty s těmito surovinami.</p>';
+                recipesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <i class="ph ph-magnifying-glass" style="font-size: 3rem; opacity: 0.5;"></i>
+                    <p>Bohužel jsme nenašli žádné recepty s těmito surovinami.</p>
+                </div>`;
                 return;
             }
 
             renderCurrentBatch();
         } catch (error) {
             console.error("Chyba při hledání:", error);
-            recipesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--danger-text);">Nepodařilo se načíst recepty z API. Zkuste to prosím později.</p>`;
+            recipesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--danger-text); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                <i class="ph ph-warning-circle" style="font-size: 3rem;"></i>
+                <p><strong>Nepodařilo se načíst recepty z API.</strong><br>Zkontrolujte připojení k internetu nebo zkuste to prosím později.</p>
+            </div>`;
         }
     }
 
@@ -522,7 +543,10 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
         
         if (recipes.length === 0) {
-            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Zatím tu nic není.</p>';
+            container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                <i class="ph ph-heart-break" style="font-size: 3rem; opacity: 0.5;"></i>
+                <p>Zatím tu nemáš žádné oblíbené recepty.</p>
+            </div>`;
             return;
         }
 
@@ -557,7 +581,10 @@ document.addEventListener('DOMContentLoaded', () => {
         shoppingListContainer.innerHTML = '';
 
         if (shoppingList.length === 0) {
-            shoppingListContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">V nákupním seznamu zatím nemáš žádné suroviny.</p>';
+            shoppingListContainer.innerHTML = `<div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                <i class="ph ph-shopping-cart" style="font-size: 3rem; opacity: 0.5;"></i>
+                <p>V nákupním seznamu zatím nemáš žádné suroviny.</p>
+            </div>`;
             return;
         }
 

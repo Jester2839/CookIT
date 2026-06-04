@@ -814,6 +814,20 @@ body {
     background-color: var(--danger-light);
 }
 
+/* --- Chybové hlášky --- */
+.error-message {
+    color: var(--danger-text);
+    background-color: var(--danger-light);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    border: 1px solid rgba(198, 40, 40, 0.2);
+}
+
 /* --- Media Queries pro responzivní design --- */
 
 /* Tablet (a větší) - od 768px */
