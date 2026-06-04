@@ -248,6 +248,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Obrana proti neplatným ID (např. "null" jako řetězec z datasetu)
         if (!id || id === 'null' || id === 'undefined') return;
 
+        // --- KONTROLA LOKÁLNÍCH DAT (Podpora pro offline a menší zátěž API) ---
+        const numericId = Number(id);
+        const localFav = favorites.find(f => Number(f.id) === numericId);
+        if (localFav && localFav.extendedIngredients) {
+            detailModal.classList.add('active');
+            renderRecipeDetail(localFav);
+            return;
+        }
+
         detailModal.classList.add('active');
         detailTitle.textContent = "Načítám...";
         detailImg.src = "";
@@ -260,6 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Nepodařilo se načíst data z API (možná neplatné ID nebo limit)');
             
             const recipe = await res.json();
+            
+            // Pokud už je recept v oblíbených (ale chyběla plná data z gridu), rovnou data doplníme
+            const favIndex = favorites.findIndex(f => Number(f.id) === numericId);
+            if (favIndex !== -1) {
+                favorites[favIndex] = recipe;
+                localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
+            }
             
             renderRecipeDetail(recipe);
         } catch (error) {
@@ -377,6 +393,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Uložíme kopii se zaručeným číselným ID
             favorites.push({ ...recipe, id: recipeId });
+
+            // Pokusíme se stáhnout kompletní detaily potichu na pozadí, pokud chybí (offline příprava)
+            if (!recipe.extendedIngredients) {
+                fetchFullRecipeAndSave(recipeId);
+            }
         }
 
         localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
@@ -387,6 +408,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pokud jsme zrovna v sekci oblíbených, rovnou to překreslíme
         if (document.getElementById('favorites-section').classList.contains('active')) {
             renderFavorites();
+        }
+    }
+
+    // Tichá funkce pro dotažení plných dat receptu na pozadí (např. při přidání z hlavní stránky)
+    async function fetchFullRecipeAndSave(id) {
+        try {
+            const res = await fetch(`https://api.spoonacular.com/recipes/${id}/information?includeNutrition=true&apiKey=${API_KEY}`);
+            if (res.ok) {
+                const fullRecipe = await res.json();
+                const index = favorites.findIndex(f => Number(f.id) === Number(id));
+                if (index !== -1) {
+                    favorites[index] = fullRecipe;
+                    localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
+                }
+            }
+        } catch (error) {
+            console.warn("Stažení plných dat na pozadí selhalo (jste pravděpodobně offline).", error);
         }
     }
 
