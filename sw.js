@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cookit-cache-v1';
+const CACHE_NAME = 'cookit-cache-v6';
 
 // Soubory, které chceme nakešovat hned při instalaci (tzv. precaching)
 const ASSETS_TO_CACHE = [
@@ -8,8 +8,12 @@ const ASSETS_TO_CACHE = [
     './app.js',
     './config.js',
     './manifest.json',
-    './img/icon.svg',
-    './img/icon.png'
+    './img/favicon-96x96.png',
+    './img/favicon.svg',
+    './img/favicon.ico',
+    './img/apple-touch-icon.png',
+    './img/web-app-manifest-192x192.png',
+    './img/web-app-manifest-512x512.png'
 ];
 
 // Instalace Service Workeru
