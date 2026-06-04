@@ -15,6 +15,11 @@
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
 }
 
+/* Fluidní typografie - základní velikost písma se přizpůsobuje šířce okna */
+html {
+    font-size: clamp(15px, 0.5vw + 13px, 18px);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
