@@ -231,6 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSearch.addEventListener('click', () => {
         fetchRecipesByIngredients();
     });
+    
+    if (btnLoadMore) {
+        btnLoadMore.addEventListener('click', () => {
+            currentRenderLimit += 10; // Přidá dalších 10 receptů
+            renderCurrentBatch();
+        });
+    }
 
     // --- NOVÁ FUNKCE PRO HLEDÁNÍ RECEPTŮ ---
     async function fetchRecipesByIngredients() {
@@ -239,6 +246,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedIngredients.length === 0) {
             alert('Nejdřív vyber aspoň jednu surovinu!');
             return;
+        }
+
+        recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Hledám ty nejlepší recepty...</p>';
+        if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+
+        try {
+            const ingredientsString = encodeURIComponent(selectedIngredients.join(','));
+            // Stáhneme 50 receptů (API limit pro findByIngredients) a vyfiltrujeme podle ingrediencí
+            const response = await fetch(`https://api.spoonacular.com/recipes/findByIngredients?ingredients=${ingredientsString}&number=50&ranking=2&ignorePantry=true&apiKey=${API_KEY}`);
+            
+            if (!response.ok) throw new Error('API chyba nebo vyčerpaný limit');
+            
+            currentFetchedRecipes = await response.json();
+            currentRenderLimit = 10; // Vždy začneme zobrazením prvních 10
+            
+            if (currentFetchedRecipes.length === 0) {
+                recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Bohužel jsme nenašli žádné recepty s těmito surovinami.</p>';
+                return;
+            }
+
+            renderCurrentBatch();
+        } catch (error) {
+            console.error("Chyba při hledání:", error);
+            recipesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--danger-text);">Nepodařilo se načíst recepty z API. Zkuste to prosím později.</p>`;
         }
     }
 

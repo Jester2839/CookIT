@@ -148,6 +148,9 @@ body {
 .search-container.is-sticky .btn-search {
     display: none;
 }
+.search-container.is-sticky .search-main-row {
+    margin: 0.5rem;
+}
 
 .search-header {
     display: flex;
@@ -293,6 +296,11 @@ body {
     flex-direction: column;
     gap: 1rem;
     animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideUp {
@@ -790,4 +798,79 @@ body {
 
 .btn-remove-shop:hover {
     background-color: var(--danger-light);
+}
+
+/* --- Media Queries pro responzivní design --- */
+
+/* Tablet (a větší) - od 768px */
+@media (min-width: 768px) {
+    /* Vylepšení modálních oken pro větší obrazovky */
+    .modal {
+        align-items: center; /* Centrování vertikálně */
+        padding: 2rem;
+    }
+
+    .modal-content {
+        height: auto;
+        max-height: 90vh;
+        width: 100%;
+        max-width: 640px; /* Omezení šířky */
+        border-radius: var(--radius); /* Zaoblení všech rohů */
+        animation: fadeInScale 0.3s ease-out; /* Nová animace pro centraci */
+    }
+
+    .detail-content {
+        max-width: 720px; /* Detail může být o něco širší */
+    }
+
+    /* Větší obrázek v detailu receptu */
+    .detail-hero-img {
+        height: 300px;
+    }
+
+    /* Zvětšení karet receptů a mezer mezi nimi */
+    .recipes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+/* Desktop (a větší) - od 1024px */
+@media (min-width: 1024px) {
+    /* Širší hlavní obsah, aby to nebylo tak "roztažené" */
+    .app-content {
+        max-width: 1100px;
+        padding: 2rem;
+        padding-bottom: 6rem;
+    }
+
+    .app-header {
+        padding: 4rem 2rem;
+    }
+
+    /* Omezení šířky sticky vyhledávání, aby odpovídalo obsahu */
+    .search-container.is-sticky {
+        max-width: 1100px;
+    }
+
+    /* Ještě větší obrázek v detailu receptu */
+    .detail-hero-img {
+        height: 350px;
+    }
+
+    /* Čtyři sloupce pro nutriční hodnoty na velkém displeji */
+    .nutrition-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Změna spodní navigace na "plovoucí" lištu, která na PC vypadá lépe */
+    .bottom-nav {
+        max-width: 400px;
+        margin: 0 auto 1rem auto;
+        border-radius: 24px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        bottom: 0;
+        height: 4.5rem; /* Odebrání výpočtu pro safe-area, na PC není potřeba */
+        padding-bottom: 0;
+    }
 }
