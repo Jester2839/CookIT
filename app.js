@@ -94,6 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. EVENT LISTENERY ---
 
+    // Delegovaná událost pro mazání tagů ingrediencí
+    tagsContainer.addEventListener('click', e => {
+        const removeBtn = e.target.closest('.remove-tag');
+        if (removeBtn) {
+            const ingToRemove = removeBtn.dataset.name;
+            selectedIngredients = selectedIngredients.filter(ing => ing !== ingToRemove);
+            renderTags();
+        }
+    });
+
     // Přepínání záložek ve spodním menu
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -222,14 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchRecipesByIngredients();
     });
 
-    // --- TLAČÍTKO DALŠÍ RECEPTY ---
-    if (btnLoadMore) {
-        btnLoadMore.addEventListener('click', () => {
-            currentRenderLimit += 10;
-            renderCurrentBatch();
-        });
-    }
-
     // --- NOVÁ FUNKCE PRO HLEDÁNÍ RECEPTŮ ---
     async function fetchRecipesByIngredients() {
         if (!recipesGrid) return; 
@@ -237,26 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedIngredients.length === 0) {
             alert('Nejdřív vyber aspoň jednu surovinu!');
             return;
-        }
-
-        // Spojí ingredience čárkou pro API formát (např. "apples,+flour,+sugar")
-        const ingredientsString = selectedIngredients.join(',+');
-        recipesGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary);"></i><p style="margin-top: 1rem; color: var(--text-muted);">Hledám nejlepší recepty...</p></div>';
-        if (loadMoreContainer) loadMoreContainer.style.display = 'none';
-
-        try {
-            // Stáhneme rovnou 30 receptů a uložíme do paměti (šetří to API volání pro stránkování)
-            const response = await fetch(`https://api.spoonacular.com/recipes/findByIngredients?ingredients=${ingredientsString}&number=30&apiKey=${API_KEY}`);
-            if (!response.ok) throw new Error('Chyba při stahování receptů');
-            
-            currentFetchedRecipes = await response.json();
-            currentRenderLimit = 10; // Reset limitu zobrazených receptů
-            
-            renderCurrentBatch();
-        } catch (error) {
-            console.error("Chyba při stahování receptů:", error);
-            alert("Došlo k chybě při načítání nových receptů. API limit je pravděpodobně vyčerpán.");
-            recipesGrid.innerHTML = '';
         }
     }
 
