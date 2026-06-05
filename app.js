@@ -311,13 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Převedeme pole (např. ["egg", "milk"]) na URL string ("egg%2Cmilk")
             const ingredientsString = encodeURIComponent(selectedIngredients.join(','));
-            // Stáhneme 50 receptů (API limit pro findByIngredients) a vyfiltrujeme podle ingrediencí
-            const response = await fetch(`https://api.spoonacular.com/recipes/findByIngredients?ingredients=${ingredientsString}&number=50&ranking=2&ignorePantry=true&apiKey=${API_KEY}`);
+            // Použijeme complexSearch, abychom z API rovnou získali i kalorie (addRecipeNutrition=true)
+            const response = await fetch(`https://api.spoonacular.com/recipes/complexSearch?includeIngredients=${ingredientsString}&number=50&sort=max-used-ingredients&ignorePantry=true&addRecipeNutrition=true&apiKey=${API_KEY}`);
             
             // Kontrola, jestli máme vyčerpané kvóty na API nebo error ze serveru
             if (!response.ok) throw new Error('API chyba nebo vyčerpaný limit');
             
-            currentFetchedRecipes = await response.json();
+            const data = await response.json();
+            currentFetchedRecipes = data.results || [];
             currentRenderLimit = 10; // Vždy začneme zobrazením prvních 10
             
             if (currentFetchedRecipes.length === 0) {
@@ -611,6 +612,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderRecipes(recipes, container) {
         container.innerHTML = '';
         
+        // Zjistíme, jestli vykreslujeme do záložky oblíbených
+        const isFavoritesTab = container.id === 'favorites-grid';
+        
         if (recipes.length === 0) {
             container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                 <i class="ph ph-heart-break" style="font-size: 3rem; opacity: 0.5;"></i>
@@ -626,12 +630,31 @@ document.addEventListener('DOMContentLoaded', () => {
             article.className = 'recipe-card';
             article.dataset.id = recipe.id;
 
+            // Dynamické sestavení textu pro kartu
+            let infoText = '';
+            if (recipe.nutrition && recipe.nutrition.nutrients) {
+                const cals = recipe.nutrition.nutrients.find(n => n.name === 'Calories');
+                const prot = recipe.nutrition.nutrients.find(n => n.name === 'Protein');
+                
+                if (cals) {
+                    if (isFavoritesTab && prot) {
+                        // V oblíbených zůstane původní formát (kalorie + bílkoviny)
+                        infoText = `🔥 ${Math.round(cals.amount)} kcal &bull; 🥩 ${Math.round(prot.amount)}g bílk.`;
+                    } else {
+                        // Vyhledané recepty budou mít jen kalorie
+                        infoText = `🔥 ${Math.round(cals.amount)} kcal`;
+                    }
+                }
+            } else {
+                infoText = 'Kalorie neznámé';
+            }
+
             article.innerHTML = `
                 <img src="${recipe.image}" alt="${recipe.title}" class="recipe-img">
                 <div class="recipe-info">
                     <h3>${recipe.title}</h3>
                     <p class="recipe-nutrition" style="margin-bottom: 0.5rem">
-                        ${recipe.missedIngredientCount !== undefined ? `Chybí suroviny: ${recipe.missedIngredientCount}` : 'Uložený recept'}
+                        ${infoText}
                     </p>
                     <button class="btn-fav ${isFav ? 'active' : ''}" data-id="${recipe.id}">
                         <i class="${isFav ? 'ph-fill ph-heart' : 'ph ph-heart'}"></i>
