@@ -90,3 +90,33 @@ Při ztrátě připojení se navíc zobrazí uživateli oranžový "Offline rež
 
 ## 6. Use-Case diagram
 
+Níže je diagram případů užití (Use-Case) zapsaný v syntaxi Mermaid (na GitHubu a kompatibilních prohlížečích se automaticky vykreslí).
+
+```mermaid
+flowchart LR
+    %% Aktoři
+    U([Uživatel])
+    API([Spoonacular API])
+
+    %% Hranice systému (Aplikace)
+    subgraph CookIT [Aplikace CookIT]
+        direction TB
+        UC1(Vyhledání surovin v našeptávači)
+        UC2(Vyhledání receptů podle surovin)
+        UC3(Zobrazení detailu receptu)
+        UC4(Přidání / odebrání z oblíbených)
+        UC5(Správa nákupního seznamu)
+    end
+
+    %% Interakce uživatele se systémem
+    U --- UC1
+    U --- UC2
+    U --- UC3
+    U --- UC4
+    U --- UC5
+
+    %% Volání externího API systémem
+    UC1 -.->|GET Autocomplete| API
+    UC2 -.->|GET findByIngredients| API
+    UC3 -.->|GET Information| API
+```
