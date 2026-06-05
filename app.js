@@ -1,14 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- 0. PWA & OFFLINE STAV ---
+    // Zkontrolujeme, zda prohlížeč podporuje Service Worker (pro PWA - instalaci aplikace a kešování)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('Service Worker úspěšně registrován s rozsahem:', reg.scope))
             .catch(err => console.error('Registrace Service Workeru selhala:', err));
     }
 
+    // Element, který uživateli ukazuje "Offline režim"
     const offlineIndicator = document.getElementById('offlineIndicator');
     
+    // Funkce, která zjistí, zda jsme na internetu nebo offline, a podle toho (s)kryje indikátor
     function updateOnlineStatus() {
         if (!offlineIndicator) return;
         if (navigator.onLine) {
@@ -17,23 +20,36 @@ document.addEventListener('DOMContentLoaded', () => {
             offlineIndicator.style.display = 'block';
         }
     }
+    // Nasloucháme změnám připojení přímo z prohlížeče
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus(); // Okamžitá kontrola po načtení
     
+
+
     // --- 1. STAVOVÉ PROMĚNNÉ ---
+    // Proměnná pro ukládání právě vybraných surovin uživatelem
     let selectedIngredients = [];
+    
     // Načtení a okamžitá filtrace poškozených dat (odstranění záznamů s null/NaN ID)
+    // `localStorage.getItem` načítá data uložená v prohlížeči (aby nezmizela po F5)
     let favorites = (JSON.parse(localStorage.getItem('cookit_favorites')) || [])
         .filter(f => f && f.id !== null && f.id !== undefined && !isNaN(Number(f.id)));
+        
     let shoppingList = JSON.parse(localStorage.getItem('cookit_shopping_list')) || [];
     
     // Migrace starých textových dat na objekty (pro případ, že už tam něco máš z minula)
     shoppingList = shoppingList.map(item => typeof item === 'string' ? { recipeTitle: 'Samostatně přidané', name: item } : item);
 
+    // Proměnné pro stránkování (načítání dalších) a vyhledávání
+    // debounceTimer slouží k tomu, abychom neposílali dotaz na API po každém stisknutí klávesy
     let debounceTimer; 
+    // Sem si uložíme všechny nalezené recepty z API, abychom je mohli zobrazovat postupně
     let currentFetchedRecipes = [];
+    // Kolik receptů chceme aktuálně zobrazit (po kliknutí na "Další" se to zvýší)
     let currentRenderLimit = 10;
+
+
 
     // --- 2. DOM ELEMENTY ---
     // Navigace
@@ -68,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailFavBtn = document.getElementById('detail-fav-btn');
 
     // --- DETEKCE STICKY STAVU ---
+    // IntersectionObserver sleduje, zda je nějaký element viditelný na obrazovce.
+    // Tady hlídáme "search-sentinel". Když odscrolujeme dolů a zmizí, lišta hledání se přilepí (sticky).
     const observer = new IntersectionObserver(
         ([e]) => {
             if (!e.isIntersecting && e.boundingClientRect.top < 0) {
@@ -93,9 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (searchSentinel) observer.observe(searchSentinel);
 
+
+
     // --- 3. EVENT LISTENERY ---
 
     // Delegovaná událost pro mazání tagů ingrediencí
+    // Místo toho, abychom dávali 'click' na každý křížek zvlášť, dáme ho na kontejner a zjišťujeme, co se kliklo.
     tagsContainer.addEventListener('click', e => {
         const removeBtn = e.target.closest('.remove-tag');
         if (removeBtn) {
@@ -108,13 +129,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Přepínání záložek ve spodním menu
     navItems.forEach(item => {
         item.addEventListener('click', () => {
+            // Nejprve odebereme třídu 'active' ze všech tlačítek a záložek
             navItems.forEach(n => n.classList.remove('active'));
             tabContents.forEach(t => t.classList.remove('active'));
 
+            // Následně přidáme 'active' jen na to kliknuté
             item.classList.add('active');
             const targetId = item.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
 
+            // Pokud uživatel přepnul na oblíbené nebo nákupy, musíme je překreslit aktuálními daty
             if (targetId === 'favorites-section') {
                 renderFavorites();
             } else if (targetId === 'shopping-section') {
@@ -123,11 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Zavření modalu s detailem receptu
     btnCloseDetail.addEventListener('click', () => {
         detailModal.classList.remove('active');
     });
 
-    // Otevření modalu
+    // Otevření modalu pro vyhledávání surovin
     btnAdd.addEventListener('click', () => {
         modal.classList.add('active');
         modalSearch.value = '';
@@ -146,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Real-time hledání ingrediencí s napojením na API
+    // Událost 'input' se spustí pokaždé, když uživatel napíše nějaké písmeno
     modalSearch.addEventListener('input', (e) => {
         // Odstranění mezer a diakritiky pro čistší query (Spoonacular si s tím poradí lépe)
         const query = e.target.value.trim()
@@ -154,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/[\u0300-\u036f]/g, "");
         
         // Zrušení předchozího časovače, pokud uživatel stále píše
+        // Toto je ten 'debounce' - dokud člověk rychle píše, neodesíláme nic.
         clearTimeout(debounceTimer);
 
         if (query.length < 2) {
@@ -175,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderModalList(ingredientNames);
             } catch (error) {
                 console.error("Nepodařilo se našeptat ingredience:", error);
+                // Vypsání chyby přímo do seznamu, pokud API selže nebo jsme offline
                 modalList.innerHTML = `<li style="color: var(--danger-text); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 2rem 1rem;">
                     <i class="ph ph-warning-circle" style="font-size: 2rem;"></i>
                     <span>Chyba při načítání ingrediencí. Zkuste to prosím znovu.</span>
@@ -184,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Vykreslení seznamu našeptaných ingrediencí v modalu
+    // Parametr 'items' je pole názvů surovin (např. ["apple", "apple juice"])
     function renderModalList(items) {
         modalList.innerHTML = '';
         
@@ -192,10 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Pro každou surovinu vytvoříme řádek <li>
         items.forEach(ing => {
             const li = document.createElement('li');
             li.textContent = ing; // Spoonacular vrací anglické názvy (např. "apple", "chicken")
             li.addEventListener('click', () => {
+                // Pokud tam ještě ingredience není, přidáme ji do stavového pole
                 if (!selectedIngredients.includes(ing)) {
                     selectedIngredients.push(ing);
                     renderTags();
@@ -208,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Vykreslení vybraných tagů na hlavní stránce
+    // Tuto funkci voláme z HTML přímo pomocí onclick="removeIngredient(...)", proto ji musíme pověsit na window
     window.removeIngredient = function(ingToRemove) {
         selectedIngredients = selectedIngredients.filter(ing => ing !== ingToRemove);
         renderTags();
@@ -216,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTags() {
         tagsContainer.innerHTML = '';
         
+        // Zobrazení prázdného stavu
         if (selectedIngredients.length === 0) {
             tagsContainer.innerHTML = `
                 <div class="empty-state-msg">
@@ -225,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Pro každou vybranou surovinu vytvoříme barevný "štítek" (tag)
         selectedIngredients.forEach(ing => {
             const span = document.createElement('span');
             span.className = 'tag';
@@ -233,11 +267,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+
     // --- TRIGGER TLAČÍTKEM ---
+    // Když klikneme na hlavní tlačítko "Najít recepty", spustíme hledání
     btnSearch.addEventListener('click', () => {
         fetchRecipesByIngredients();
     });
     
+    // Tlačítko pro načtení dalších receptů (stránkování v paměti)
     if (btnLoadMore) {
         btnLoadMore.addEventListener('click', () => {
             currentRenderLimit += 10; // Přidá dalších 10 receptů
@@ -245,10 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NOVÁ FUNKCE PRO HLEDÁNÍ RECEPTŮ ---
+
+
+    // --- FUNKCE PRO HLEDÁNÍ RECEPTŮ ---
     async function fetchRecipesByIngredients() {
         if (!recipesGrid) return; 
 
+        // Ochrana před odesláním prázdného dotazu
         if (selectedIngredients.length === 0) {
             if (searchError) {
                 searchError.innerHTML = '<i class="ph ph-warning-circle" style="font-size: 1.2rem;"></i> Nejdřív vyber aspoň jednu surovinu!';
@@ -263,14 +304,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (searchError) searchError.style.display = 'none';
+        // Zobrazíme info o načítání, zatímco čekáme na odpověď od API
         recipesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Hledám ty nejlepší recepty...</p>';
         if (loadMoreContainer) loadMoreContainer.style.display = 'none';
 
         try {
+            // Převedeme pole (např. ["egg", "milk"]) na URL string ("egg%2Cmilk")
             const ingredientsString = encodeURIComponent(selectedIngredients.join(','));
             // Stáhneme 50 receptů (API limit pro findByIngredients) a vyfiltrujeme podle ingrediencí
             const response = await fetch(`https://api.spoonacular.com/recipes/findByIngredients?ingredients=${ingredientsString}&number=50&ranking=2&ignorePantry=true&apiKey=${API_KEY}`);
             
+            // Kontrola, jestli máme vyčerpané kvóty na API nebo error ze serveru
             if (!response.ok) throw new Error('API chyba nebo vyčerpaný limit');
             
             currentFetchedRecipes = await response.json();
@@ -287,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCurrentBatch();
         } catch (error) {
             console.error("Chyba při hledání:", error);
+            // Zobrazení uživatelsky přívětivé chyby, když selže fetch (např. offline nebo vyčerpaný API klíč)
             recipesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--danger-text); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                 <i class="ph ph-warning-circle" style="font-size: 3rem;"></i>
                 <p><strong>Nepodařilo se načíst recepty z API.</strong><br>Zkontrolujte připojení k internetu nebo zkuste to prosím později.</p>
@@ -294,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Funkce vezme aktuálních 10 (nebo víc) receptů a vykreslí je na stránku
     function renderCurrentBatch() {
         const recipesToShow = currentFetchedRecipes.slice(0, currentRenderLimit);
         renderRecipes(recipesToShow, recipesGrid);
@@ -304,6 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Stažení detailu (nutriční hodnoty, postup) pro konkrétní recept
+    // Spouští se, když uživatel klikne na recept v gridu.
     async function fetchRecipeDetail(id) {
         // Obrana proti neplatným ID (např. "null" jako řetězec z datasetu)
         if (!id || id === 'null' || id === 'undefined') return;
@@ -312,11 +360,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const numericId = Number(id);
         const localFav = favorites.find(f => Number(f.id) === numericId);
         if (localFav && localFav.extendedIngredients) {
+            // Pokud už máme recept v paměti plně načtený, neztrácíme čas voláním API a ukážeme ho rovnou
             detailModal.classList.add('active');
             renderRecipeDetail(localFav);
             return;
         }
 
+        // Vyčištění modalu a příprava na načtení nových dat
         detailModal.classList.add('active');
         detailTitle.textContent = "Načítám...";
         detailImg.src = "";
@@ -340,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderRecipeDetail(recipe);
         } catch (error) {
             console.error("Chyba při načítání detailu:", error);
+            // Pokud to spadne, ukážeme uživateli hlášku (aby nezůstal koukat na prázdný "Načítám..." okno)
             detailTitle.textContent = "Limit API vyčerpán";
             detailInstructions.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--danger-text);">
                 <i class="ph ph-warning-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
@@ -349,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Zobrazení obsahu do okna "Detail receptu" (Modal)
     function renderRecipeDetail(recipe) {
         detailTitle.textContent = recipe.title;
         detailImg.src = recipe.image;
@@ -367,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         // 1. Nutriční hodnoty
+        // Vybíráme jen základní (Kalorie, Tuky, atd.), zbytek ignorujeme
         const nutrients = recipe.nutrition.nutrients;
         const translations = {
             'Calories': 'Kalorie',
@@ -386,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
 
         // 2. Ingredience
+        // Vypíšeme všechny suroviny. Navíc testujeme, jestli už je máme v nákupním košíku, abychom jim rovnou přiřadili styl.
         detailIngredients.innerHTML = recipe.extendedIngredients
             .map(ing => {
                 const ingName = ing.original || ing.name;
@@ -403,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Postup
         let instructionsHTML = "<p>Postup bohužel není k dispozici.</p>";
         
+        // API dává postup dvěma způsoby: buď jako pole kroků (lepší) nebo jako dlouhý kus textu. Zkusíme to lepší.
         // Preferujeme analyzovaný postup rozdělený na kroky
         if (recipe.analyzedInstructions && recipe.analyzedInstructions.length > 0) {
             const steps = recipe.analyzedInstructions[0].steps;
@@ -414,15 +469,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Delegovaná událost pro tlačítka "Přidat do nákupu" v detailu receptu
+    // V detailu receptu chytáme všechny kliky na košíky a řešíme přidávání/odebírání z nákupního seznamu.
     detailIngredients.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-shop-toggle');
         if (!btn) return;
 
+        // Název ingredience a receptu máme uložený přes data-name a text v nadpisu
         const ingName = btn.dataset.name;
         const recipeTitle = detailTitle.textContent;
         const index = shoppingList.findIndex(item => item.name === ingName && item.recipeTitle === recipeTitle);
         const liElement = btn.closest('li');
 
+        // Pokud v seznamu není, přidáme ji. Pokud tam je, tak ji ze seznamu odstraníme (Toggle efekt).
         if (index === -1) {
             shoppingList.push({ recipeTitle, name: ingName });
             btn.classList.add('active');
@@ -437,10 +495,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (liElement) liElement.classList.remove('in-cart-bg');
         }
 
+        // Vždy po změně si seznam trvale uložíme
         localStorage.setItem('cookit_shopping_list', JSON.stringify(shoppingList));
     });
 
     // Funkce pro přepínání oblíbených
+    // Volá se po kliknutí na srdíčko na kartě nebo v detailu
     function toggleFavorite(recipe) {
         if (!recipe || recipe.id === null || recipe.id === undefined) return;
         
@@ -452,6 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isNowFav = index === -1;
         
         if (!isNowFav) {
+            // Pokud už je v oblíbených, vyhodíme ji odsud (index určuje pozici v poli)
             favorites.splice(index, 1);
         } else {
             // Uložíme kopii se zaručeným číselným ID
@@ -463,6 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Přepsání localStorage novou hodnotou
         localStorage.setItem('cookit_favorites', JSON.stringify(favorites));
         
         // Synchronizace VŠECH srdíček pro tento recept (na kartách i v detailu)
@@ -475,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Tichá funkce pro dotažení plných dat receptu na pozadí (např. při přidání z hlavní stránky)
+    // Když člověk přidá do oblíbených z výpisu, máme jen jméno a fotku. My ale chceme i suroviny (kvůli oflline režimu).
     async function fetchFullRecipeAndSave(id) {
         try {
             const res = await fetch(`https://api.spoonacular.com/recipes/${id}/information?includeNutrition=true&apiKey=${API_KEY}`);
@@ -491,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Změní ikonu ze "srdíčko - obrys" na "srdíčko - plné červené" a naopak všude, kde se to momentálně zobrazuje.
     function updateHeartIcons(recipeId, isActive) {
         // Najdeme všechna tlačítka v mřížce podle data-id
         const gridButtons = document.querySelectorAll(`.btn-fav[data-id="${recipeId}"]`);
@@ -513,6 +577,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- DELEGACE KLIKNUTÍ PRO GRID (pro statické i dynamické karty) ---
+    // Tohle je důležité! Místo 50 click eventů pro 50 karet máme jen 1 na celém gridu.
+    // Sleduje, jestli člověk klikl na kartu obecně (zobrazíme detail) nebo přesně na srdíčko.
     function handleGridClick(e, grid) {
         const card = e.target.closest('.recipe-card');
         if (!card) return;
@@ -525,12 +591,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (btnFav) {
             e.stopPropagation();
+            // Uživatel klikl na srdíčko – přepneme stav oblíbených
             toggleFavorite({ 
                 id: recipeId, 
                 title: card.querySelector('h3').textContent, 
                 image: card.querySelector('img').src 
             });
         } else {
+            // Uživatel klikl kamkoliv jinam na kartu – otevřeme plný detail z API
             fetchRecipeDetail(recipeId);
         }
     }
@@ -539,6 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
     favoritesGrid.addEventListener('click', (e) => handleGridClick(e, favoritesGrid));
 
     // Univerzální vykreslení receptů do mřížky
+    // Tuhle funkci používáme jak na výsledky hledání, tak na oblíbené (pokaždé pošleme jiné `recipes` a jiný `container`)
     function renderRecipes(recipes, container) {
         container.innerHTML = '';
         
@@ -550,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Pro každý recept z pole vygenerujeme jednu dlaždici `<article>`
         recipes.forEach(recipe => {
             const isFav = favorites.some(f => f.id === recipe.id);
             const article = document.createElement('article');
@@ -573,13 +643,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+
+    
     // --- NÁKUPNÍ SEZNAM ---
     const shoppingListContainer = document.getElementById('shopping-list');
     
+    // Funkce vezme nákupní seznam a vypíše ho na příslušnou stránku
     function renderShoppingList() {
         if (!shoppingListContainer) return;
         shoppingListContainer.innerHTML = '';
 
+        // Ošetření prázdného seznamu (lepší UX než koukat do zdi)
         if (shoppingList.length === 0) {
             shoppingListContainer.innerHTML = `<div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem;">
                 <i class="ph ph-shopping-cart" style="font-size: 3rem; opacity: 0.5;"></i>
@@ -589,6 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Seskupení ingrediencí podle názvu receptu (tzv. "Dictionary" pattern)
+        // Tady vytvoříme objekt, kde co klíč, to název receptu a uvnitř je pole surovin
         const grouped = {};
         shoppingList.forEach(item => {
             if (!grouped[item.recipeTitle]) {
@@ -598,6 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Vykreslení jednotlivých "kartiček" pro každý recept
+        // Projdeme seskupené objekty a vytvoříme oddělené skupiny v HTML
         for (const [recipeTitle, ingredients] of Object.entries(grouped)) {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'shopping-group';
@@ -620,6 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Delegovaná událost pro mazání z nákupního seznamu
+    // Sleduje kliknutí na popelnici v košíku
     if (shoppingListContainer) {
         shoppingListContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.btn-remove-shop');
@@ -628,6 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const recipeTitle = btn.dataset.title;
             const ingName = btn.dataset.name;
 
+            // Najdeme, která konkrétní surovina z kterého receptu se má smazat, a vyhodíme ji z pole
             const index = shoppingList.findIndex(item => item.recipeTitle === recipeTitle && item.name === ingName);
             if (index !== -1) {
                 shoppingList.splice(index, 1);
