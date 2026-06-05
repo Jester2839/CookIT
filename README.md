@@ -48,9 +48,9 @@ Aplikace využívá **Spoonacular API** pro získávání receptů a ingredienc�
    - **Využití:** Modální okno pro vyhledávání a přidávání surovin (s využitím debounce pro omezení počtu requestů).
 
 2. **Vyhledání receptů podle ingrediencí**
-   - **`GET`** `https://api.spoonacular.com/recipes/findByIngredients`
-   - **Parametry:** `ingredients` (čárkou oddělený seznam), `number` (max počet vrácených receptů), `ranking`, `ignorePantry`.
-   - **Využití:** Hlavní vyhledávací funkce. Získá seznam základních informací o receptech na základě vybraných tagů.
+   - **`GET`** `https://api.spoonacular.com/recipes/complexSearch`
+   - **Parametry:** `includeIngredients` (čárkou oddělený seznam), `number` (max počet), `sort`, `addRecipeNutrition=true`.
+   - **Využití:** Hlavní vyhledávací funkce. Získá seznam základních informací o receptech (včetně kalorií) na základě vybraných tagů.
 
 3. **Detail konkrétního receptu**
    - **`GET`** `https://api.spoonacular.com/recipes/{id}/information`
@@ -117,6 +117,6 @@ flowchart LR
 
     %% Volání externího API systémem
     UC1 -.->|GET Autocomplete| API
-    UC2 -.->|GET findByIngredients| API
+    UC2 -.->|GET complexSearch| API
     UC3 -.->|GET Information| API
 ```
